@@ -11,7 +11,7 @@ public class Boss extends Enemy {
 
 	@Override
 	public void move() {
-		getBounds().translate(left ? -0.1 : 0.1, 0);
+		getBounds().translate(left ? -1 : 1, 0);
 
 		if (getX() == 0 || getX() == (getParent().getSafeArea().width - getWidth())) {
 			left = !left;
