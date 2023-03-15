@@ -77,13 +77,6 @@ public class Ship extends Entity implements IDynamic {
 				lastShot = System.currentTimeMillis();
 			}
 		}
-
-		if (parent.keyState(VK_Q)) {
-			if (System.currentTimeMillis() - lastShot > 1000 / fireRate) {
-				parent.spawn(new Invader(parent));
-				lastShot = System.currentTimeMillis();
-			}
-		}
 	}
 
 	@Override
