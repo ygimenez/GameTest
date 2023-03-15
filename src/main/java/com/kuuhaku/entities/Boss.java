@@ -16,7 +16,7 @@ public class Boss extends Enemy {
 		getBounds().translate(left ? -2 : 2, 0);
 
 		Rectangle safe = getParent().getSafeArea();
-		if (getX() <= safe.width / 3 || getX() >= safe.width / 3 * 2) {
+		if ((left && getX() <= safe.width / 3) || (!left && getX() >= safe.width / 3 * 2)) {
 			left = !left;
 			getBounds().translate(0, 10);
 		}
