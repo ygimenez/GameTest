@@ -65,7 +65,7 @@ public abstract class Entity {
 	}
 
 	public void setHp(int hp) {
-		this.hp = hp;
+		this.hp = Math.max(0, hp);
 	}
 
 	public void destroy() {

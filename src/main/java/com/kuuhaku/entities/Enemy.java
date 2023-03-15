@@ -58,9 +58,4 @@ public abstract class Enemy extends Entity implements IDynamic {
 			}
 		}
 	}
-
-	@Override
-	public void destroy() {
-		parent.getEnemies().release();
-	}
 }

@@ -12,6 +12,7 @@ public class Renderer extends Canvas {
 		window.setSize(800, 600);
 		window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		window.add(this);
+		window.setLocationRelativeTo(null);
 		window.setVisible(true);
 
 		createBufferStrategy(2);

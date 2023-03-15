@@ -19,9 +19,12 @@ public class Game extends KeyAdapter implements Closeable {
 	private final boolean[] keyState = new boolean[256];
 	private final Thread simulation;
 	private final Semaphore lock = new Semaphore(1);
-	private final Semaphore enemies = new Semaphore(10);
-	private final Ship player = new Ship(this);
 
+	private final Semaphore invLimit = new Semaphore(10);
+	private final Semaphore wavLimit = new Semaphore(0);
+	private final Semaphore bosLimit = new Semaphore(0);
+
+	private final Ship player = new Ship(this);
 
 	private int round = 1;
 	private int score = 0;
@@ -107,11 +110,15 @@ public class Game extends KeyAdapter implements Closeable {
 				}
 			}
 
-			if (System.currentTimeMillis() - lastSpawn > 5000 / getRound() && enemies.tryAcquire()) {
-				if (Math.random() > 0.5 && getRound() > 3) {
+			if (System.currentTimeMillis() - lastSpawn > 1000 + 4000 / getRound()) {
+				spawn(new Invader(this));
+
+				if (Math.random() > 0.5 && wavLimit.tryAcquire()) {
 					spawn(new Waver(this));
-				} else {
-					spawn(new Invader(this));
+				}
+
+				if (Math.random() > 0.8 && bosLimit.tryAcquire()) {
+					spawn(new Boss(this));
 				}
 
 				lastSpawn = System.currentTimeMillis();
@@ -140,7 +147,8 @@ public class Game extends KeyAdapter implements Closeable {
 			g2d.drawString("Entities: " + entities.size(), 10, 60);
 
 			g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
-			g2d.drawString("HP: " + player.getHp(), 10, renderer.getHeight() - 30);
+			g2d.drawString("HP: " + player.getHp(), 10, renderer.getHeight() - 50);
+			g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 30);
 			g2d.drawString("Score: " + score, 10, renderer.getHeight() - 10);
 
 			if (gameover) {
@@ -184,8 +192,16 @@ public class Game extends KeyAdapter implements Closeable {
 		return keyState[code] ? 1 : 0;
 	}
 
-	public Semaphore getEnemies() {
-		return enemies;
+	public Semaphore getInvLimit() {
+		return invLimit;
+	}
+
+	public Semaphore getWavLimit() {
+		return wavLimit;
+	}
+
+	public Semaphore getBosLimit() {
+		return bosLimit;
 	}
 
 	public void addScore(int score) {
@@ -196,7 +212,14 @@ public class Game extends KeyAdapter implements Closeable {
 		int round = 1 + score / 1000;
 		if (round != this.round) {
 			this.round = round;
-			enemies.release(5);
+
+			invLimit.release();
+			if (round % 3 == 0) {
+				wavLimit.release(5);
+			}
+			if (round % 10 == 0) {
+				bosLimit.release(round / 10);
+			}
 		}
 
 		return this.round;

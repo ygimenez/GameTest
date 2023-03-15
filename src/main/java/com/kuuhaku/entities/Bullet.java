@@ -47,6 +47,8 @@ public class Bullet extends Entity implements IDynamic, IProjectile {
 
 	@Override
 	public boolean hit(Entity other) {
-		return !(owner.getClass().equals(other.getClass())) && getBounds().intersect(other.getBounds());
+		if (!getBounds().intersect(getParent().getSafeArea())) return false;
+
+		return (other instanceof Ship == !(owner instanceof Ship)) && getBounds().intersect(other.getBounds());
 	}
 }

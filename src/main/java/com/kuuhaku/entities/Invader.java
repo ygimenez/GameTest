@@ -11,4 +11,9 @@ public class Invader extends Enemy {
 	public void move() {
 		getBounds().translate(0, 0.3);
 	}
+
+	@Override
+	public void destroy() {
+		getParent().getInvLimit().release();
+	}
 }
