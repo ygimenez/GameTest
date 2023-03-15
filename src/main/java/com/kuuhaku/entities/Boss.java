@@ -13,7 +13,7 @@ public class Boss extends Enemy {
 	public void move() {
 		getBounds().translate(left ? -1 : 1, 0);
 
-		if (getX() == 0 || getX() == (getParent().getSafeArea().width - getWidth())) {
+		if (getX() <= 10 || getX() >= (getParent().getSafeArea().width - getWidth() - 10)) {
 			left = !left;
 			getBounds().translate(0, 5);
 		}
