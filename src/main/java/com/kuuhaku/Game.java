@@ -111,7 +111,9 @@ public class Game extends KeyAdapter implements Closeable {
 			}
 
 			if (System.currentTimeMillis() - lastSpawn > 1000 + 4000 / getRound()) {
-				spawn(new Invader(this));
+				if (invLimit.tryAcquire()) {
+					spawn(new Invader(this));
+				}
 
 				if (Math.random() > 0.5 && wavLimit.tryAcquire()) {
 					spawn(new Waver(this));
