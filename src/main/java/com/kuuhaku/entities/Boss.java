@@ -2,6 +2,8 @@ package com.kuuhaku.entities;
 
 import com.kuuhaku.Game;
 
+import java.awt.*;
+
 public class Boss extends Enemy {
 	private boolean left = false;
 
@@ -11,11 +13,12 @@ public class Boss extends Enemy {
 
 	@Override
 	public void move() {
-		getBounds().translate(left ? -1 : 1, 0);
+		getBounds().translate(left ? -2 : 2, 0);
 
-		if (getX() <= 10 || getX() >= (getParent().getSafeArea().width - getWidth() - 10)) {
+		Rectangle safe = getParent().getSafeArea();
+		if (getX() <= safe.width / 3 || getX() >= safe.width / 3 * 2) {
 			left = !left;
-			getBounds().translate(0, 5);
+			getBounds().translate(0, 10);
 		}
 	}
 }
