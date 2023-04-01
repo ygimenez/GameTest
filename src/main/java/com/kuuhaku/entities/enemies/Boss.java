@@ -1,6 +1,6 @@
 package com.kuuhaku.entities.enemies;
 
-import com.kuuhaku.GameRuntime;
+import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.interfaces.Managed;
 

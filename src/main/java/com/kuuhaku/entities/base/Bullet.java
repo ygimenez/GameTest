@@ -1,6 +1,7 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.GameRuntime;
+import com.kuuhaku.AssetManager;
+import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IProjectile;
@@ -40,7 +41,7 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 			if (entity instanceof IProjectile) continue;
 
 			if (hit(entity)) {
-				playCue("hit");
+				AssetManager.playCue("hit");
 				entity.setHp(entity.getHp() - 50);
 				setHp(0);
 				break;

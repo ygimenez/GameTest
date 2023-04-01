@@ -74,10 +74,20 @@ public abstract class AssetManager {
 			clip.open(ais);
 			audioInstances.incrementAndGet();
 
+			FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+			gain.setValue(20f * (float) Math.log10(0.5));
+
 			return clip;
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 			e.printStackTrace();
 			return null;
+		}
+	}
+
+	public static void playCue(String file) {
+		Clip cue = getAudio(file);
+		if (cue != null) {
+			cue.start();
 		}
 	}
 

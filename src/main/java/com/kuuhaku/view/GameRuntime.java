@@ -1,11 +1,17 @@
-package com.kuuhaku;
+package com.kuuhaku.view;
 
+import com.kuuhaku.AssetManager;
+import com.kuuhaku.Renderer;
+import com.kuuhaku.Utils;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.enemies.Invader;
 import com.kuuhaku.interfaces.IDynamic;
+import com.kuuhaku.interfaces.IMenu;
+import com.kuuhaku.ui.ButtonElement;
 
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -16,13 +22,12 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-public class GameRuntime extends KeyAdapter implements Runnable, Closeable {
+public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 	private final Set<Entity> entities = new HashSet<>();
 	private final Set<Entity> queue = new HashSet<>();
 	private final boolean[] keyState = new boolean[256];
 	private final Semaphore lock = new Semaphore(1);
 	private final Renderer renderer;
-	private final double framerate;
 	private final Ship player;
 
 	private final Semaphore spawnLimit = new Semaphore(10);
@@ -30,21 +35,21 @@ public class GameRuntime extends KeyAdapter implements Runnable, Closeable {
 	private int round = 1;
 	private int score = 0;
 	private boolean gameover = false;
-	private long lastFrame, lastSimu, lastSpawn;
+	private long lastSimu, lastSpawn;
+	private ButtonElement back;
 
-	public GameRuntime(Renderer renderer, double fps) {
+	public GameRuntime(Renderer renderer) {
 		this.renderer = renderer;
-		this.framerate = 1000 / fps;
 		this.player = new Ship(this);
 	}
 
 	@Override
-	public void run() {
+	public void switchTo(IMenu from) {
 		renderer.addKeyListener(this);
 
 		entities.add(player);
 		Thread simulation = new Thread(() -> {
-			double simrate = framerate / 4;
+			double simrate = renderer.getFramerate() / 4;
 			while (!Thread.interrupted()) {
 				process();
 				lastSimu = System.currentTimeMillis();
@@ -61,19 +66,26 @@ public class GameRuntime extends KeyAdapter implements Runnable, Closeable {
 
 		Clip cue = AssetManager.getAudio("theme");
 		if (cue != null) {
+			FloatControl gain = (FloatControl) cue.getControl(FloatControl.Type.MASTER_GAIN);
+			gain.setValue(20f * (float) Math.log10(0.25));
+
 			cue.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 
-		while (!Thread.interrupted()) {
-			renderer.render(this::render);
-			lastFrame = System.currentTimeMillis();
+		back = new ButtonElement(renderer)
+				.setSize(150, 50)
+				.setText("BACK");
 
-			try {
-				Thread.sleep((long) framerate, (int) (1_000_000 * (framerate - (long) framerate)));
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		back.addListener(e -> {
+			from.switchTo(this);
+			back.dispose();
+
+			if (cue != null) {
+				cue.close();
 			}
-		}
+		});
+
+		renderer.render(this::render);
 	}
 
 	public Rectangle getBounds() {
@@ -139,15 +151,15 @@ public class GameRuntime extends KeyAdapter implements Runnable, Closeable {
 	public void render(Graphics2D g2d) {
 		try {
 			lock.acquire();
-			Rectangle bounds = renderer.getBounds();
 
 			g2d.setColor(Color.BLACK);
-			g2d.fill(bounds);
+			g2d.fill(renderer.getBounds());
 
 			long curr = System.currentTimeMillis();
 			g2d.setColor(Color.WHITE);
 			g2d.setFont(renderer.getFont());
 
+			long lastFrame = renderer.getFrameTime();
 			g2d.drawString("FPS: " + (curr == lastFrame ? "---" : (1000 / (curr - lastFrame))), 10, 20);
 			g2d.drawString("UPS: " + (curr == lastSimu ? "---" : (1000 / (curr - lastSimu))), 10, 40);
 			g2d.drawString("Entities: " + entities.size(), 10, 60);
@@ -160,12 +172,8 @@ public class GameRuntime extends KeyAdapter implements Runnable, Closeable {
 
 			if (gameover) {
 				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
-
-				FontMetrics fm = g2d.getFontMetrics();
-				g2d.drawString("GAME OVER",
-						renderer.getWidth() / 2 - fm.stringWidth("GAME OVER") / 2,
-						renderer.getHeight() / 2 + fm.getHeight() / 2
-				);
+				Utils.drawAlignedString(g2d, "GAME OVER", renderer.getWidth() / 2, renderer.getHeight() / 2, Utils.ALIGN_CENTER);
+				back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 2 + 50);
 			}
 
 			for (Entity entity : getEntities()) {

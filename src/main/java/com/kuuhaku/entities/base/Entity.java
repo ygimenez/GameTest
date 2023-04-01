@@ -2,9 +2,8 @@ package com.kuuhaku.entities.base;
 
 import com.kuuhaku.AssetManager;
 import com.kuuhaku.Coordinates;
-import com.kuuhaku.GameRuntime;
+import com.kuuhaku.view.GameRuntime;
 
-import javax.sound.sampled.Clip;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -64,13 +63,6 @@ public abstract class Entity {
 
 	public void destroy() {
 
-	}
-
-	protected void playCue(String file) {
-		Clip cue = AssetManager.getAudio(file);
-		if (cue != null) {
-			cue.start();
-		}
 	}
 
 	@Override

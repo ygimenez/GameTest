@@ -1,6 +1,7 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.GameRuntime;
+import com.kuuhaku.AssetManager;
+import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IProjectile;
@@ -31,7 +32,7 @@ public abstract class Pickup extends Entity implements IDynamic, IProjectile {
 			if (!(entity instanceof Ship s)) continue;
 
 			if (hit(entity)) {
-				playCue("pickup");
+				AssetManager.playCue("pickup");
 				addBonus(s);
 				setHp(0);
 				break;

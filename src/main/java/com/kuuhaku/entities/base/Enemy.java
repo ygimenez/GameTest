@@ -1,6 +1,7 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.GameRuntime;
+import com.kuuhaku.AssetManager;
+import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.entities.pickups.FastshotPickup;
 import com.kuuhaku.entities.pickups.HealthPickup;
 import com.kuuhaku.entities.pickups.MultishotPickup;
@@ -44,7 +45,7 @@ public abstract class Enemy extends Entity implements IDynamic {
 	public void setHp(int hp) {
 		super.setHp(hp);
 		if (hp == 0) {
-			playCue("explode");
+			AssetManager.playCue("explode");
 			parent.addScore(points);
 
 			if (Math.random() > 0.8) {

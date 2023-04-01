@@ -1,6 +1,7 @@
 package com.kuuhaku.entities;
 
-import com.kuuhaku.GameRuntime;
+import com.kuuhaku.AssetManager;
+import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.Utils;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.projectiles.ShipBullet;
@@ -75,7 +76,7 @@ public class Ship extends Entity implements IDynamic {
 
 		if (parent.keyState(VK_SPACE)) {
 			if (System.currentTimeMillis() - lastShot > 1000 / fireRate) {
-				playCue("ship_fire");
+				AssetManager.playCue("ship_fire");
 				for (int i = 0; i < bullets; i++) {
 					double step = 45d / (bullets + 1);
 					parent.spawn(new ShipBullet(this, 2, -45 / 2d + step * (i + 1)));
@@ -88,10 +89,10 @@ public class Ship extends Entity implements IDynamic {
 
 	@Override
 	public void destroy() {
-		playCue("explode");
+		AssetManager.playCue("explode");
 
 		CompletableFuture.runAsync(() -> {
-			playCue("game_over");
+			AssetManager.playCue("game_over");
 			parent.close();
 		}, CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS));
 	}
