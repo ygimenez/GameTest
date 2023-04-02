@@ -76,7 +76,7 @@ public abstract class Enemy extends Entity implements IDynamic {
 			AssetManager.playCue("explode");
 			parent.addScore(points);
 
-			if (ThreadLocalRandom.current().nextDouble() > 0.8) {
+			if (ThreadLocalRandom.current().nextDouble() > 1 - (points * 0.0001)) {
 				Class<Pickup> drop = drops.get(ThreadLocalRandom.current().nextInt(drops.size()));
 
 				try {
