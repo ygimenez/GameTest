@@ -22,7 +22,7 @@ public class Boss extends Enemy {
 	private int angle = 0;
 
 	public Boss(GameRuntime parent) {
-		super(parent, "boss", 2000, 12, 3);
+		super(parent, "boss", (int) (2000 * (1 + parent.getRound() / 10) + parent.getTick() / 20), 12, 3);
 		this.baseHp = getHp();
 		this.primary = new Cooldown(parent, 2500 / getFireRate());
 		this.secondary = new Cooldown(parent, 250 / getFireRate());
@@ -42,6 +42,8 @@ public class Boss extends Enemy {
 			}
 		}
 	}
+
+
 
 	@Override
 	public void update() {
@@ -91,6 +93,8 @@ public class Boss extends Enemy {
 
 	@Override
 	public void setHp(int hp) {
+		if (getY() < getParent().getSafeArea().height / 20) return;
+
 		super.setHp(hp);
 		if (getHp() <= 0) {
 			AssetManager.playCue("boss_explode");

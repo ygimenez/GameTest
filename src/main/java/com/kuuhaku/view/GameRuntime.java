@@ -169,7 +169,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			}
 
 			if (entities.stream().noneMatch(e -> e instanceof Enemy i && i.isBoss())) {
-				if (tick - lastSpawn > 250 + 1000 / getRound()) {
+				if (tick - lastSpawn > 250 + 1000 / getRound() - Math.min(100, getTick() / 5000)) {
 					if (spawnLimit.tryAcquire()) {
 						List<Enemy> pool = enemies.stream()
 								.filter(e -> e.getPoints() <= score - difficulty)
@@ -244,12 +244,17 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
 			}
 
+			g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 30));
 			for (Entity entity : getEntities()) {
-				AffineTransform tr = new AffineTransform();
-				tr.translate(entity.getX(), entity.getY());
-				tr.rotate(entity.getBounds().getAngle(), entity.getWidth() / 2d, entity.getHeight());
+				if (entity instanceof Enemy && entity.getY() < -50) {
+					Utils.drawAlignedString(g2d, "^", entity.getX(), 20, Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM);
+				} else {
+					AffineTransform tr = new AffineTransform();
+					tr.translate(entity.getX(), entity.getY());
+					tr.rotate(entity.getBounds().getAngle(), entity.getWidth() / 2d, entity.getHeight());
 
-				g2d.drawImage(entity.getSprite(), tr, null);
+					g2d.drawImage(entity.getSprite(), tr, null);
+				}
 			}
 			lock.release();
 		} catch (InterruptedException e) {

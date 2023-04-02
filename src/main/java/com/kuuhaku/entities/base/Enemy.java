@@ -39,7 +39,7 @@ public abstract class Enemy extends Entity implements IDynamic {
 		this.cooldown = new Cooldown(parent, 2500 / fireRate);
 
 		getBounds().setPosition(
-				ThreadLocalRandom.current().nextDouble() * (getParent().getSafeArea().width - getWidth()),
+				ThreadLocalRandom.current().nextDouble() * (getParent().getSafeArea().width * 0.8 - getWidth()),
 				getParent().getBounds().y + 50
 		);
 	}
