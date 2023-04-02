@@ -4,6 +4,12 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import java.awt.*;
 import java.awt.font.GlyphVector;
+import java.io.File;
+import java.lang.annotation.Annotation;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class Utils {
@@ -86,5 +92,60 @@ public abstract class Utils {
 				}
 			}
 		}
+	}
+
+	public static List<Class<?>> getAnnotatedClasses(Class<? extends Annotation> annotation, String packageName) {
+		List<Class<?>> out = new ArrayList<>();
+		List<Class<?>> classes = getClasses(packageName);
+
+		for (Class<?> clazz : classes) {
+			if (clazz.isAnnotationPresent(annotation)) {
+				out.add(clazz);
+			}
+		}
+
+		return out;
+	}
+
+	public static List<Class<?>> getClasses(String packageName) {
+		List<Class<?>> out = new ArrayList<>();
+		String path = packageName.replace(".", "/");
+		ClassLoader classLoader = Utils.class.getClassLoader();
+
+		try {
+			for (URL resource : Collections.list(classLoader.getResources(path))) {
+				File file = new File(resource.toURI());
+
+				if (file.isDirectory()) {
+					out.addAll(findClasses(packageName, file));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return out;
+	}
+
+	private static List<Class<?>> findClasses(String packageName, File directory) throws ClassNotFoundException {
+		List<Class<?>> out = new ArrayList<>();
+
+		if (!directory.exists()) {
+			return out;
+		}
+
+		File[] files = directory.listFiles();
+		if (files == null) return List.of();
+
+		for (File file : files) {
+			if (file.isDirectory()) {
+				out.addAll(findClasses(packageName + "." + file.getName(), file));
+			} else if (file.getName().endsWith(".class")) {
+				String className = file.getName().substring(0, file.getName().length() - 6);
+				out.add(Class.forName(packageName + "." + className));
+			}
+		}
+
+		return out;
 	}
 }

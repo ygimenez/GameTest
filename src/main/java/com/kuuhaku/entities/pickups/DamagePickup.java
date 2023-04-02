@@ -6,13 +6,13 @@ import com.kuuhaku.entities.base.Pickup;
 import com.kuuhaku.interfaces.Managed;
 
 @Managed
-public class HealthPickup extends Pickup {
-	public HealthPickup(Entity owner) {
-		super(owner, "health");
+public class DamagePickup extends Pickup {
+	public DamagePickup(Entity owner) {
+		super(owner, "damage");
 	}
 
 	@Override
 	public void addBonus(Ship ship) {
-		ship.setHp(ship.getHp() + 25);
+		ship.setDamage(ship.getDamage() + 10);
 	}
 }

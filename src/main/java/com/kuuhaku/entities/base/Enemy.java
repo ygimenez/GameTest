@@ -2,24 +2,33 @@ package com.kuuhaku.entities.base;
 
 import com.kuuhaku.AssetManager;
 import com.kuuhaku.Cooldown;
+import com.kuuhaku.Utils;
 import com.kuuhaku.entities.Ship;
-import com.kuuhaku.interfaces.IProjectile;
-import com.kuuhaku.view.GameRuntime;
-import com.kuuhaku.entities.pickups.FastshotPickup;
-import com.kuuhaku.entities.pickups.HealthPickup;
-import com.kuuhaku.entities.pickups.MultishotPickup;
-import com.kuuhaku.entities.pickups.SpeedPickup;
 import com.kuuhaku.entities.projectiles.EnemyBullet;
 import com.kuuhaku.interfaces.IDynamic;
+import com.kuuhaku.interfaces.IProjectile;
+import com.kuuhaku.interfaces.Managed;
+import com.kuuhaku.view.GameRuntime;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Enemy extends Entity implements IDynamic {
+	private static final List<Class<Pickup>> drops = new ArrayList<>();
+
 	private final GameRuntime parent;
 	private final int fireRate;
 	private final int bullets;
 	private final int points;
 	private final Cooldown cooldown;
+
+	static {
+		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.pickups")) {
+			drops.add((Class<Pickup>) klass);
+		}
+	}
 
 	public Enemy(GameRuntime parent, String sprite, int hp, int fireRate, int bullets) {
 		super(sprite, hp + (int) (parent.getTick() / 1000));
@@ -29,7 +38,10 @@ public abstract class Enemy extends Entity implements IDynamic {
 		this.points = getHp() / 3 + 20 * fireRate + 100 * bullets;
 		this.cooldown = new Cooldown(parent, 2500 / fireRate);
 
-		getBounds().setPosition(Math.random() * (getParent().getSafeArea().width - getWidth()), getParent().getBounds().y);
+		getBounds().setPosition(
+				ThreadLocalRandom.current().nextDouble() * (getParent().getSafeArea().width - getWidth()),
+				getParent().getBounds().y + 50
+		);
 	}
 
 	@Override
@@ -64,13 +76,14 @@ public abstract class Enemy extends Entity implements IDynamic {
 			AssetManager.playCue("explode");
 			parent.addScore(points);
 
-			if (Math.random() > 0.8) {
-				parent.spawn(List.of(
-						new MultishotPickup(this),
-						new FastshotPickup(this),
-						new SpeedPickup(this),
-						new HealthPickup(this)
-				).get((int) (Math.random() * 4)));
+			if (ThreadLocalRandom.current().nextDouble() > 0.8) {
+				Class<Pickup> drop = drops.get(ThreadLocalRandom.current().nextInt(drops.size()));
+
+				try {
+					parent.spawn(drop.getConstructor(Entity.class).newInstance(this));
+				} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
@@ -80,6 +93,7 @@ public abstract class Enemy extends Entity implements IDynamic {
 	@Override
 	public void destroy() {
 		getParent().getSpawnLimit().release();
+		getParent().releaseDifficulty(getPoints());
 	}
 
 	@Override

@@ -18,6 +18,7 @@ public class Ship extends Entity implements IDynamic {
 	private final Cooldown cooldown;
 	private double fireRate = 3;
 	private int bullets = 1;
+	private int damage = 50;
 	private double speed = 1;
 
 	public Ship(GameRuntime parent) {
@@ -69,6 +70,14 @@ public class Ship extends Entity implements IDynamic {
 		this.speed = speed;
 	}
 
+	public int getDamage() {
+		return damage;
+	}
+
+	public void setDamage(int damage) {
+		this.damage = damage;
+	}
+
 	@Override
 	public void update() {
 		move(
@@ -82,7 +91,7 @@ public class Ship extends Entity implements IDynamic {
 				AssetManager.playCue("ship_fire");
 				for (int i = 0; i < bullets; i++) {
 					double step = 45d / (bullets + 1);
-					parent.spawn(new ShipBullet(this, fireRate, -45 / 2d + step * (i + 1)));
+					parent.spawn(new ShipBullet(this, damage, fireRate, -45 / 2d + step * (i + 1)));
 				}
 			}
 		}

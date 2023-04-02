@@ -1,8 +1,8 @@
 package com.kuuhaku.entities.enemies;
 
-import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.interfaces.Managed;
+import com.kuuhaku.view.GameRuntime;
 
 @Managed
 public class Waver extends Enemy {
@@ -14,6 +14,6 @@ public class Waver extends Enemy {
 
 	@Override
 	public void move() {
-		getBounds().translate(Math.sin(Math.toRadians(angle++ / 2d)) * 2, 0.3);
+		getBounds().translate(Math.sin(Math.toRadians(angle++ / 2d)), 0.3);
 	}
 }

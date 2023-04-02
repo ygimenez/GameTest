@@ -10,11 +10,13 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 	private final Entity owner;
 	private final double speed;
 	private final double[] vector;
+	private final int damage;
 
-	public Bullet(Entity owner, String sprite, double speed, double angle) {
+	public Bullet(Entity owner, String sprite, int damage, double speed, double angle) {
 		super(sprite, 1);
 		this.owner = owner;
 		this.speed = speed;
+		this.damage = damage;
 
 		getBounds().setAngle(owner.getBounds().getAngle() + Math.toRadians(angle));
 		vector = new double[]{

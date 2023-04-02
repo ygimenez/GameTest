@@ -6,9 +6,10 @@ import com.kuuhaku.Utils;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
-import com.kuuhaku.entities.enemies.Boss;
+import com.kuuhaku.entities.enemies.Invader;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IMenu;
+import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.ui.ButtonElement;
 
 import javax.sound.sampled.Clip;
@@ -17,12 +18,16 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class GameRuntime extends KeyAdapter implements IMenu {
+	private final Set<Enemy> enemies = new HashSet<>();
 	private final Set<Entity> entities = new HashSet<>();
 	private final Set<Entity> queue = new HashSet<>();
 	private final boolean[] keyState = new boolean[256];
@@ -34,18 +39,27 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	private int round = 1;
 	private int score = 0;
+	private int difficulty = 0;
 	private boolean paused, gameover, boss;
 	private long tick, lastSimu, lastSpawn;
 	private ButtonElement back;
 	private Clip theme, bossTheme;
-
-	private boolean l = false;
 
 	private static int highscore;
 
 	public GameRuntime(Renderer renderer) {
 		this.renderer = renderer;
 		this.player = new Ship(this);
+
+		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.enemies")) {
+			try {
+				Enemy e = (Enemy) klass.getConstructor(GameRuntime.class).newInstance(this);
+				enemies.add(e);
+			} catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+					 NoSuchMethodException ex) {
+				ex.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -107,8 +121,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public Rectangle getBounds() {
 		Rectangle r = new Rectangle(renderer.getBounds());
-		r.grow(0, 100);
-		r.translate(0, -50);
+		r.grow(0, 150);
+		r.translate(0, -100);
 
 		return r;
 	}
@@ -156,9 +170,24 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 			if (entities.stream().noneMatch(e -> e instanceof Enemy i && i.isBoss())) {
 				if (tick - lastSpawn > 250 + 1000 / getRound()) {
-					if (!l && spawnLimit.tryAcquire()) {
-						spawn(new Boss(this));
-						l = true;
+					if (spawnLimit.tryAcquire()) {
+						List<Enemy> pool = enemies.stream()
+								.filter(e -> e.getPoints() <= score - difficulty)
+								.filter(e -> e.isBoss() == (round % 10 == 0))
+								.toList();
+
+						if (!pool.isEmpty()) {
+							Enemy chosen = pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
+
+							try {
+								spawn(chosen.getClass().getConstructor(GameRuntime.class).newInstance(this));
+								difficulty += chosen.getPoints();
+							} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+								e.printStackTrace();
+							}
+						} else {
+							spawn(new Invader(this));
+						}
 					}
 
 					lastSpawn = tick;
@@ -263,7 +292,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		int round = 1 + score / 1000;
 		if (round != this.round) {
 			this.round = round;
-			spawnLimit.release();
+			spawnLimit.release(3);
 		}
 
 		return this.round;
@@ -271,6 +300,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public long getTick() {
 		return tick;
+	}
+
+	public void releaseDifficulty(int difficulty) {
+		this.difficulty -= difficulty;
 	}
 
 	public void close() {
