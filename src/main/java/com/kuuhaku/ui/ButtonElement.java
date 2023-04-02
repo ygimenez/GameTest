@@ -85,14 +85,10 @@ public class ButtonElement extends MouseAdapter {
 
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		if (hover) {
-			if (disabled) {
-				AssetManager.playCue("menu_invalid");
-			} else {
-				AssetManager.playCue("menu_click");
-				for (ActionListener listener : listeners) {
-					listener.actionPerformed(new ActionEvent(ButtonElement.this, e.getID(), null));
-				}
+		if (hover && !disabled) {
+			AssetManager.playCue("menu_click");
+			for (ActionListener listener : listeners) {
+				listener.actionPerformed(new ActionEvent(ButtonElement.this, e.getID(), null));
 			}
 		}
 	}

@@ -1,6 +1,7 @@
 package com.kuuhaku.entities;
 
 import com.kuuhaku.AssetManager;
+import com.kuuhaku.Cooldown;
 import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.Utils;
 import com.kuuhaku.entities.base.Entity;
@@ -14,7 +15,7 @@ import static java.awt.event.KeyEvent.*;
 
 public class Ship extends Entity implements IDynamic {
 	private final GameRuntime parent;
-	private long lastShot;
+	private final Cooldown cooldown;
 	private double fireRate = 3;
 	private int bullets = 1;
 	private double speed = 1;
@@ -22,6 +23,7 @@ public class Ship extends Entity implements IDynamic {
 	public Ship(GameRuntime parent) {
 		super("ship", 200);
 		this.parent = parent;
+		this.cooldown = new Cooldown(parent, (int) (500 / fireRate));
 
 		getBounds().setPosition(parent.getSafeArea().width / 2d - getWidth() / 2d, parent.getSafeArea().height - 100);
 	}
@@ -75,14 +77,13 @@ public class Ship extends Entity implements IDynamic {
 		);
 
 		if (parent.keyState(VK_SPACE)) {
-			if (System.currentTimeMillis() - lastShot > 1000 / fireRate) {
+			cooldown.setTime((int) (500 / fireRate));
+			if (cooldown.use()) {
 				AssetManager.playCue("ship_fire");
 				for (int i = 0; i < bullets; i++) {
 					double step = 45d / (bullets + 1);
-					parent.spawn(new ShipBullet(this, 2, -45 / 2d + step * (i + 1)));
+					parent.spawn(new ShipBullet(this, fireRate, -45 / 2d + step * (i + 1)));
 				}
-
-				lastShot = System.currentTimeMillis();
 			}
 		}
 	}

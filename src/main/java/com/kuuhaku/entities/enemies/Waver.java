@@ -9,7 +9,7 @@ public class Waver extends Enemy {
 	private int angle;
 
 	public Waver(GameRuntime parent) {
-		super(parent, "waver", 150, 5, 1);
+		super(parent, "waver", 150, 6, 2);
 	}
 
 	@Override

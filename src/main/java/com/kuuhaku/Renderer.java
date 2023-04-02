@@ -8,7 +8,7 @@ public class Renderer extends Canvas {
 	private final JFrame window = new JFrame();
 	private final Font font = new Font("Monospaced", Font.PLAIN, 15);
 	private Consumer<Graphics2D> frame;
-	private long lastFrame;
+	private long lastFrame, frameTime;
 	private double framerate;
 
 	public Renderer(double fps) {
@@ -28,6 +28,7 @@ public class Renderer extends Canvas {
 					getBufferStrategy().show();
 				}
 
+				frameTime = System.currentTimeMillis() - lastFrame;
 				lastFrame = System.currentTimeMillis();
 
 				try {
@@ -54,7 +55,7 @@ public class Renderer extends Canvas {
 	}
 
 	public long getFrameTime() {
-		return System.currentTimeMillis() - lastFrame;
+		return frameTime;
 	}
 
 	@Override

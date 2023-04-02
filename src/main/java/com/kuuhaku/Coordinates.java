@@ -64,13 +64,10 @@ public class Coordinates {
 	}
 
 	private boolean intersect(double x, int width, double y, int height) {
-		return (
-					   Utils.between(this.x, x, x + width)
-					   || Utils.between(this.x + this.width, x, x + width)
-			   )
-			   && (
-					   Utils.between(this.y, y, y + height)
-					   || Utils.between(this.y + this.height, y, y + height)
-			   );
+		if (this.width == 0 || this.height == 0) return false;
+		else if (this.x > x + width || x > this.x + this.width) return false;
+		else if (this.y > y + height || y > this.y + this.height) return false;
+
+		return true;
 	}
 }

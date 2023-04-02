@@ -1,7 +1,10 @@
 package com.kuuhaku;
 
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.FloatControl;
 import java.awt.*;
 import java.awt.font.GlyphVector;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class Utils {
 	public static final int ALIGN_LEFT = 0;
@@ -16,6 +19,14 @@ public abstract class Utils {
 
 	public static boolean between(double val, double min, double max) {
 		return val >= min && val <= max;
+	}
+
+	public static float clamp(float val, float min, float max) {
+		return Math.max(min, Math.min(val, max));
+	}
+
+	public static float toDecibels(float prcnt) {
+		return 20 * (float) Math.log10(prcnt);
 	}
 
 	public static void drawAlignedString(Graphics2D g2d, String str, int x, int y, int alignment) {
@@ -39,5 +50,41 @@ public abstract class Utils {
 		};
 
 		g2d.drawString(str, x, y);
+	}
+
+	public static void transition(Clip from, Clip to) {
+		CompletableFuture.runAsync(() -> {
+			fadeTo(from, 0);
+			fadeTo(to, 0.25f);
+		});
+	}
+
+	public static void fadeTo(Clip clip, float target) {
+		FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+		target = toDecibels(target);
+
+		if (gain.getValue() > target) {
+			while (gain.getValue() > target) {
+				try {
+					gain.setValue(gain.getValue() - 0.2f);
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					break;
+				}
+			}
+		} else {
+			while (gain.getValue() < target) {
+				try {
+					gain.setValue(gain.getValue() + 0.2f);
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} catch (IllegalArgumentException e) {
+					break;
+				}
+			}
+		}
 	}
 }

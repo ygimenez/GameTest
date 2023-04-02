@@ -4,8 +4,9 @@ import com.kuuhaku.AssetManager;
 import com.kuuhaku.Renderer;
 import com.kuuhaku.Utils;
 import com.kuuhaku.entities.Ship;
+import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
-import com.kuuhaku.entities.enemies.Invader;
+import com.kuuhaku.entities.enemies.Boss;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.ui.ButtonElement;
@@ -16,13 +17,12 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
-import java.io.Closeable;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.Semaphore;
 
-public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
+public class GameRuntime extends KeyAdapter implements IMenu {
 	private final Set<Entity> entities = new HashSet<>();
 	private final Set<Entity> queue = new HashSet<>();
 	private final boolean[] keyState = new boolean[256];
@@ -34,9 +34,14 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 
 	private int round = 1;
 	private int score = 0;
-	private boolean gameover = false;
-	private long lastSimu, lastSpawn;
+	private boolean paused, gameover, boss;
+	private long tick, lastSimu, lastSpawn;
 	private ButtonElement back;
+	private Clip theme, bossTheme;
+
+	private boolean l = false;
+
+	private static int highscore;
 
 	public GameRuntime(Renderer renderer) {
 		this.renderer = renderer;
@@ -64,24 +69,36 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 		simulation.setDaemon(true);
 		simulation.start();
 
-		Clip cue = AssetManager.getAudio("theme");
-		if (cue != null) {
-			FloatControl gain = (FloatControl) cue.getControl(FloatControl.Type.MASTER_GAIN);
-			gain.setValue(20f * (float) Math.log10(0.25));
+		theme = AssetManager.getAudio("theme");
+		if (theme != null) {
+			FloatControl gain = (FloatControl) theme.getControl(FloatControl.Type.MASTER_GAIN);
+			gain.setValue(20 * (float) Math.log10(0.25));
+			theme.loop(Clip.LOOP_CONTINUOUSLY);
+		}
 
-			cue.loop(Clip.LOOP_CONTINUOUSLY);
+		bossTheme = AssetManager.getAudio("boss_theme");
+		if (bossTheme != null) {
+			FloatControl gain = (FloatControl) bossTheme.getControl(FloatControl.Type.MASTER_GAIN);
+			gain.setValue(20 * (float) Math.log10(0));
+			bossTheme.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 
 		back = new ButtonElement(renderer)
-				.setSize(150, 50)
-				.setText("BACK");
+				.setSize(200, 50)
+				.setText("MAIN MENU");
 
 		back.addListener(e -> {
 			from.switchTo(this);
 			back.dispose();
+			entities.clear();
+			simulation.interrupt();
 
-			if (cue != null) {
-				cue.close();
+			if (theme != null) {
+				theme.close();
+			}
+
+			if (bossTheme != null) {
+				bossTheme.close();
 			}
 		});
 
@@ -127,6 +144,9 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 
 	public void process() {
 		try {
+			if (paused) return;
+
+			tick++;
 			lock.acquire();
 			for (Entity entity : getEntities()) {
 				if (entity instanceof IDynamic d) {
@@ -134,12 +154,23 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 				}
 			}
 
-			if (System.currentTimeMillis() - lastSpawn > 1000 + 4000 / getRound()) {
-				if (spawnLimit.tryAcquire()) {
-					spawn(new Invader(this));
+			if (entities.stream().noneMatch(e -> e instanceof Enemy i && i.isBoss())) {
+				if (tick - lastSpawn > 250 + 1000 / getRound()) {
+					if (!l && spawnLimit.tryAcquire()) {
+						spawn(new Boss(this));
+						l = true;
+					}
+
+					lastSpawn = tick;
 				}
 
-				lastSpawn = System.currentTimeMillis();
+				if (boss) {
+					Utils.transition(bossTheme, theme);
+					boss = false;
+				}
+			} else if (!boss) {
+				Utils.transition(theme, bossTheme);
+				boss = true;
 			}
 
 			lock.release();
@@ -159,21 +190,29 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 			g2d.setColor(Color.WHITE);
 			g2d.setFont(renderer.getFont());
 
-			long lastFrame = renderer.getFrameTime();
-			g2d.drawString("FPS: " + (curr == lastFrame ? "---" : (1000 / (curr - lastFrame))), 10, 20);
+			long frameTime = renderer.getFrameTime();
+			g2d.drawString("FPS: " + (frameTime == 0 ? "---" : (1000 / frameTime)), 10, 20);
 			g2d.drawString("UPS: " + (curr == lastSimu ? "---" : (1000 / (curr - lastSimu))), 10, 40);
 			g2d.drawString("Entities: " + entities.size(), 10, 60);
 			g2d.drawString("Audio cues: " + AssetManager.getAudioInstances(), 10, 80);
+			g2d.drawString("Difficulty: " + tick / 1000, 10, 120);
 
 			g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
-			g2d.drawString("HP: " + player.getHp(), 10, renderer.getHeight() - 50);
-			g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 30);
-			g2d.drawString("Score: " + score, 10, renderer.getHeight() - 10);
+			g2d.drawString("HP: " + player.getHp(), 10, renderer.getHeight() - 70);
+			g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 50);
+			g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
+			g2d.drawString("High score: " + highscore, 10, renderer.getHeight() - 10);
+
+			back.setDisabled(!(gameover || paused));
 
 			if (gameover) {
 				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
-				Utils.drawAlignedString(g2d, "GAME OVER", renderer.getWidth() / 2, renderer.getHeight() / 2, Utils.ALIGN_CENTER);
-				back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 2 + 50);
+				Utils.drawAlignedString(g2d, "GAME OVER", renderer.getWidth() / 2, renderer.getHeight() / 3, Utils.ALIGN_CENTER);
+				back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
+			} else if (paused) {
+				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
+				Utils.drawAlignedString(g2d, "PAUSED", renderer.getWidth() / 2, renderer.getHeight() / 3, Utils.ALIGN_CENTER);
+				back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
 			}
 
 			for (Entity entity : getEntities()) {
@@ -192,6 +231,10 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 	@Override
 	public void keyPressed(KeyEvent e) {
 		keyState[e.getKeyCode()] = true;
+
+		if (!gameover && e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+			paused = !paused;
+		}
 	}
 
 	@Override
@@ -213,6 +256,7 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 
 	public void addScore(int score) {
 		this.score += score;
+		highscore = Math.max(highscore, this.score);
 	}
 
 	public int getRound() {
@@ -225,7 +269,10 @@ public class GameRuntime extends KeyAdapter implements IMenu, Closeable {
 		return this.round;
 	}
 
-	@Override
+	public long getTick() {
+		return tick;
+	}
+
 	public void close() {
 		gameover = true;
 	}
