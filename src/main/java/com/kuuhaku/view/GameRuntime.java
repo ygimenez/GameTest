@@ -7,8 +7,10 @@ import com.kuuhaku.entities.Ship;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.enemies.Invader;
+import com.kuuhaku.entities.enemies.Mothership;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IMenu;
+import com.kuuhaku.interfaces.ITrackable;
 import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.ui.ButtonElement;
 
@@ -19,10 +21,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.geom.AffineTransform;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -40,7 +40,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	private int round = 1;
 	private int score = 0;
 	private int difficulty = 0;
-	private boolean paused, gameover, boss;
+	private boolean paused, gameover;
 	private long tick, lastSimu, lastSpawn;
 	private ButtonElement back;
 	private Clip theme, bossTheme;
@@ -73,11 +73,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				process();
 				lastSimu = System.currentTimeMillis();
 
-				try {
-					Thread.sleep((long) simrate, (int) (1_000_000 * (simrate - (long) simrate)));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+				Utils.sleep((long) simrate, (int) (1_000_000 * (simrate - (long) simrate)));
 			}
 		});
 		simulation.setDaemon(true);
@@ -121,8 +117,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public Rectangle getBounds() {
 		Rectangle r = new Rectangle(renderer.getBounds());
-		r.grow(0, 150);
-		r.translate(0, -100);
+		r.grow(150, 150);
+		r.translate(-75, -100);
 
 		return r;
 	}
@@ -151,9 +147,9 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		return Set.copyOf(entities);
 	}
 
-	public synchronized void spawn(Entity entity) {
+	public synchronized void spawn(Entity... entity) {
 		if (gameover) return;
-		queue.add(entity);
+		queue.addAll(Arrays.asList(entity));
 	}
 
 	public void process() {
@@ -176,30 +172,30 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 								.filter(e -> e.isBoss() == (round % 10 == 0))
 								.toList();
 
+						Enemy chosen = new Mothership(this);
 						if (!pool.isEmpty()) {
-							Enemy chosen = pool.get(ThreadLocalRandom.current().nextInt(pool.size()));
-
 							try {
-								spawn(chosen.getClass().getConstructor(GameRuntime.class).newInstance(this));
+								chosen = pool.get(ThreadLocalRandom.current().nextInt(pool.size())).getClass()
+										.getConstructor(GameRuntime.class)
+										.newInstance(this);
 								difficulty += chosen.getPoints();
 							} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 								e.printStackTrace();
 							}
 						} else {
-							spawn(new Invader(this));
+							chosen = new Invader(this);
+						}
+
+						spawn(chosen);
+						if (chosen.isBoss()) {
+							Utils.transition(theme, bossTheme);
+						} else {
+							Utils.transition(bossTheme, theme);
 						}
 					}
 
 					lastSpawn = tick;
 				}
-
-				if (boss) {
-					Utils.transition(bossTheme, theme);
-					boss = false;
-				}
-			} else if (!boss) {
-				Utils.transition(theme, bossTheme);
-				boss = true;
 			}
 
 			lock.release();
@@ -230,7 +226,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			g2d.drawString("HP: " + player.getHp(), 10, renderer.getHeight() - 70);
 			g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 50);
 			g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
-			g2d.drawString("High score: " + highscore, 10, renderer.getHeight() - 10);
+			g2d.drawString("Highscore: " + highscore, 10, renderer.getHeight() - 10);
 
 			back.setDisabled(!(gameover || paused));
 
@@ -244,11 +240,34 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
 			}
 
+			Rectangle safe = getSafeArea();
 			g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 30));
 			for (Entity entity : getEntities()) {
-				if (entity instanceof Enemy && entity.getY() < -50) {
-					Utils.drawAlignedString(g2d, "^", entity.getX(), 20, Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM);
+				if (!entity.getBounds().intersect(safe) && !entity.isCullable()) {
+					if (entity instanceof ITrackable) {
+						if (entity.getY() < safe.y) {
+							Utils.drawAlignedString(g2d, "^",
+									entity.getX() + entity.getWidth() / 2,
+									20,
+									Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
+							);
+						} else if (entity.getX() < safe.x) {
+							Utils.drawAlignedString(g2d, "<",
+									20,
+									entity.getY() + entity.getHeight() / 2,
+									Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
+							);
+						} else if (entity.getX() > safe.x + safe.width) {
+							Utils.drawAlignedString(g2d, ">",
+									safe.width - 20,
+									entity.getY() + entity.getHeight() / 2,
+									Utils.ALIGN_LEFT, Utils.ALIGN_CENTER
+							);
+						}
+					}
 				} else {
+					entity.setCullable(true);
+
 					AffineTransform tr = new AffineTransform();
 					tr.translate(entity.getX(), entity.getY());
 					tr.rotate(entity.getBounds().getAngle(), entity.getWidth() / 2d, entity.getHeight());
@@ -301,6 +320,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		}
 
 		return this.round;
+	}
+
+	public Ship getPlayer() {
+		return player;
 	}
 
 	public long getTick() {

@@ -31,11 +31,7 @@ public class Renderer extends Canvas {
 				frameTime = System.currentTimeMillis() - lastFrame;
 				lastFrame = System.currentTimeMillis();
 
-				try {
-					Thread.sleep((long) framerate, (int) (1_000_000 * (framerate - (long) framerate)));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+					Utils.sleep((long) framerate, (int) (1_000_000 * (framerate - (long) framerate)));
 			}
 		});
 		render.setDaemon(true);

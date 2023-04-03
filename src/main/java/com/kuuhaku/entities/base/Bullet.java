@@ -44,7 +44,7 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 
 			if (hit(entity)) {
 				AssetManager.playCue("hit");
-				entity.setHp(entity.getHp() - 50);
+				entity.setHp(entity.getHp() - damage);
 				setHp(0);
 				break;
 			}

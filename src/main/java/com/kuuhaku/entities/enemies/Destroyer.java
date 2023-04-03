@@ -15,14 +15,14 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Managed
-public class Boss extends Enemy {
+public class Destroyer extends Enemy {
 	private final int baseHp;
 	private final Cooldown primary, secondary;
 	private boolean left, enraged, alternate;
 	private int angle = 0;
 
-	public Boss(GameRuntime parent) {
-		super(parent, "boss", (int) (2000 * (1 + parent.getRound() / 10) + parent.getTick() / 20), 12, 3);
+	public Destroyer(GameRuntime parent) {
+		super(parent, "boss_1", (int) (2000 * (1 + parent.getRound() / 10) + parent.getTick() / 20), 12, 3);
 		this.baseHp = getHp();
 		this.primary = new Cooldown(parent, 2500 / getFireRate());
 		this.secondary = new Cooldown(parent, 250 / getFireRate());
@@ -68,16 +68,20 @@ public class Boss extends Enemy {
 					if (alternate) {
 						getParent().spawn(new EnemyBullet(this, 1, 180));
 					} else {
-						getParent().spawn(new EnemyBullet(this, 1, 180 - 30));
-						getParent().spawn(new EnemyBullet(this, 1, 180 + 30));
+						getParent().spawn(
+								new EnemyBullet(this, 1, 180 - 30),
+								new EnemyBullet(this, 1, 180 + 30)
+						);
 					}
 
 					alternate = !alternate;
 				}
 
 				if (secondary.use()) {
-					getParent().spawn(new EnemyBullet(this, 2, 180 - 45));
-					getParent().spawn(new EnemyBullet(this, 2, 180 + 45));
+					getParent().spawn(
+							new EnemyBullet(this, 2, 180 - 45),
+							new EnemyBullet(this, 2, 180 + 45)
+					);
 				}
 			} else {
 				if (primary.use()) {

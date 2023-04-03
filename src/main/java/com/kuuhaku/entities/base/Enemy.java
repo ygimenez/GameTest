@@ -7,6 +7,7 @@ import com.kuuhaku.entities.Ship;
 import com.kuuhaku.entities.projectiles.EnemyBullet;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IProjectile;
+import com.kuuhaku.interfaces.ITrackable;
 import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.view.GameRuntime;
 
@@ -15,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public abstract class Enemy extends Entity implements IDynamic {
+public abstract class Enemy extends Entity implements IDynamic, ITrackable {
 	private static final List<Class<Pickup>> drops = new ArrayList<>();
 
 	private final GameRuntime parent;
@@ -112,7 +113,7 @@ public abstract class Enemy extends Entity implements IDynamic {
 		}
 
 		if (getBounds().intersect(getParent().getSafeArea())) {
-			if (cooldown.use()) {
+			if (bullets > 0 && cooldown.use()) {
 				AssetManager.playCue("enemy_fire");
 				for (int i = 0; i < bullets; i++) {
 					double step = 45d / (bullets + 1);

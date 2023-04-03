@@ -75,7 +75,7 @@ public abstract class AssetManager {
 			audioInstances.incrementAndGet();
 
 			FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-			gain.setValue(20f * (float) Math.log10(0.5));
+			gain.setValue(20f * (float) Math.log10(0.3));
 
 			return clip;
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {

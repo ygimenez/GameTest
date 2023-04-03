@@ -1,5 +1,7 @@
 package com.kuuhaku;
 
+import com.kuuhaku.view.GameRuntime;
+
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import java.awt.*;
@@ -73,9 +75,7 @@ public abstract class Utils {
 			while (gain.getValue() > target) {
 				try {
 					gain.setValue(gain.getValue() - 0.2f);
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					sleep(10);
 				} catch (IllegalArgumentException e) {
 					break;
 				}
@@ -84,9 +84,7 @@ public abstract class Utils {
 			while (gain.getValue() < target) {
 				try {
 					gain.setValue(gain.getValue() + 0.2f);
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+					sleep(10);
 				} catch (IllegalArgumentException e) {
 					break;
 				}
@@ -147,5 +145,23 @@ public abstract class Utils {
 		}
 
 		return out;
+	}
+
+	public static void sleep(long millis) {
+		sleep(millis, 0);
+	}
+
+	public static void sleep(long millis, int nanos) {
+		try {
+			Thread.sleep(millis, nanos);
+		} catch (InterruptedException ignore) {
+		}
+	}
+
+	public static void await(GameRuntime runtime, long ticks) {
+		long target = runtime.getTick() + ticks;
+		while (runtime.getTick() < target) {
+			sleep(10);
+		}
 	}
 }

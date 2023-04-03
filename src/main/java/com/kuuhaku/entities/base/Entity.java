@@ -12,6 +12,7 @@ public abstract class Entity {
 	private final int id = ThreadLocalRandom.current().nextInt();
 	private final BufferedImage sprite;
 	private final Coordinates bounds;
+	private boolean cullable;
 	private int hp;
 
 	public Entity(String sprite, int hp) {
@@ -59,6 +60,14 @@ public abstract class Entity {
 
 	public void setHp(int hp) {
 		this.hp = Math.max(0, hp);
+	}
+
+	public boolean isCullable() {
+		return cullable;
+	}
+
+	public void setCullable(boolean cullable) {
+		this.cullable = cullable;
 	}
 
 	public void destroy() {

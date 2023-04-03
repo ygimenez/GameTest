@@ -81,8 +81,8 @@ public class Ship extends Entity implements IDynamic {
 	@Override
 	public void update() {
 		move(
-				(-parent.keyValue(VK_LEFT) + parent.keyValue(VK_RIGHT)) * speed,
-				(-parent.keyValue(VK_UP) + parent.keyValue(VK_DOWN)) * speed
+				(-parent.keyValue(VK_A) + parent.keyValue(VK_D)) * speed,
+				(-parent.keyValue(VK_W) + parent.keyValue(VK_S)) * speed
 		);
 
 		if (parent.keyState(VK_SPACE)) {
@@ -91,7 +91,7 @@ public class Ship extends Entity implements IDynamic {
 				AssetManager.playCue("ship_fire");
 				for (int i = 0; i < bullets; i++) {
 					double step = 30d / (bullets + 1);
-					parent.spawn(new ShipBullet(this, damage * bullets / 3, fireRate, -30 / 2d + step * (i + 1)));
+					parent.spawn(new ShipBullet(this, damage * 2 / (bullets + 1), fireRate, -30 / 2d + step * (i + 1)));
 				}
 			}
 		}
