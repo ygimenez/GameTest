@@ -1,7 +1,7 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.AssetManager;
-import com.kuuhaku.Coordinates;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Coordinates;
 import com.kuuhaku.view.GameRuntime;
 
 import java.awt.image.BufferedImage;

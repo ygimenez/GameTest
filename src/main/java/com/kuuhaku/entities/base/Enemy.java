@@ -1,8 +1,8 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.AssetManager;
-import com.kuuhaku.Cooldown;
-import com.kuuhaku.Utils;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Cooldown;
+import com.kuuhaku.utils.Utils;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.entities.projectiles.EnemyBullet;
 import com.kuuhaku.interfaces.IDynamic;

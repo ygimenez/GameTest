@@ -1,11 +1,11 @@
-package com.kuuhaku;
+package com.kuuhaku.utils;
 
+import com.kuuhaku.enums.SoundType;
 import com.kuuhaku.view.GameRuntime;
 
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import java.awt.*;
-import java.awt.font.GlyphVector;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.net.URL;
@@ -29,6 +29,10 @@ public abstract class Utils {
 		return val >= min && val <= max;
 	}
 
+	public static int clamp(int val, int min, int max) {
+		return Math.max(min, Math.min(val, max));
+	}
+
 	public static float clamp(float val, float min, float max) {
 		return Math.max(min, Math.min(val, max));
 	}
@@ -37,23 +41,26 @@ public abstract class Utils {
 		return 20 * (float) Math.log10(prcnt);
 	}
 
+	public static float toDecibels(SoundType type, float prcnt) {
+		return 20 * (float) Math.log10(prcnt * type.getVolume());
+	}
+
 	public static void drawAlignedString(Graphics2D g2d, String str, int x, int y, int alignment) {
 		drawAlignedString(g2d, str, x, y, alignment, ALIGN_BOTTOM);
 	}
 
 	public static void drawAlignedString(Graphics2D g2d, String str, int x, int y, int alignmentX, int alignmentY) {
-		GlyphVector gv = g2d.getFont().createGlyphVector(g2d.getFontRenderContext(), str);
-		Rectangle rect = gv.getPixelBounds(null, x, y);
+		FontMetrics fm = g2d.getFontMetrics();
 
 		x = switch (alignmentX) {
-			case ALIGN_CENTER -> x - rect.width / 2;
-			case ALIGN_RIGHT -> x - rect.width;
+			case ALIGN_CENTER -> x - fm.stringWidth(str) / 2;
+			case ALIGN_LEFT -> x - fm.stringWidth(str);
 			default -> x;
 		};
 
 		y = switch (alignmentY) {
-			case ALIGN_CENTER -> y + rect.height / 2;
-			case ALIGN_BOTTOM -> y + rect.height;
+			case ALIGN_CENTER -> y + fm.getHeight() / 4;
+			case ALIGN_BOTTOM -> y + fm.getHeight() / 2;
 			default -> y;
 		};
 
@@ -69,7 +76,7 @@ public abstract class Utils {
 
 	public static void fadeTo(Clip clip, float target) {
 		FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-		target = toDecibels(target);
+		target = toDecibels(SoundType.MASTER, target);
 
 		if (gain.getValue() > target) {
 			while (gain.getValue() > target) {
@@ -163,5 +170,15 @@ public abstract class Utils {
 		while (runtime.getTick() < target) {
 			sleep(10);
 		}
+	}
+
+	public static String capitalize(String str) {
+		if (str.isBlank()) {
+			return str;
+		} else if (str.length() < 2) {
+			return str.toUpperCase();
+		}
+
+		return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
 	}
 }

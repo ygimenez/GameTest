@@ -1,20 +1,23 @@
 package com.kuuhaku.ui;
 
-import com.kuuhaku.AssetManager;
-import com.kuuhaku.Utils;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Delta;
+import com.kuuhaku.utils.Utils;
+import com.kuuhaku.interfaces.IElement;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ButtonElement extends MouseAdapter {
+public class ButtonElement extends MouseAdapter implements IElement<ButtonElement> {
 	private final Set<ActionListener> listeners = new HashSet<>();
 	private final Rectangle bounds = new Rectangle();
 	private final Canvas context;
 
-	private String text;
-	private boolean hover, changed, disabled;
+	private String text = "";
+	private Delta<Boolean> hover = new Delta<>(false);
+	private boolean disabled;
 
 	public ButtonElement(Canvas context) {
 		this.context = context;
@@ -22,70 +25,46 @@ public class ButtonElement extends MouseAdapter {
 		context.addMouseMotionListener(this);
 	}
 
+	@Override
 	public String getText() {
 		return text;
 	}
 
+	@Override
 	public ButtonElement setText(String text) {
 		this.text = text;
 		return this;
 	}
 
+	@Override
 	public Rectangle getBounds() {
 		return bounds;
 	}
 
-	public int getWidth() {
-		return bounds.width;
-	}
-
-	public int getHeight() {
-		return bounds.height;
-	}
-
-	public ButtonElement setSize(int width, int height) {
-		bounds.setSize(width, height);
-		return this;
-	}
-
-	public int getX() {
-		return bounds.x;
-	}
-
-	public int getY() {
-		return bounds.y;
-	}
-
-	public ButtonElement setLocation(int x, int y) {
-		bounds.setLocation(x, y);
-		return this;
-	}
-
+	@Override
 	public boolean isHovered() {
-		return hover;
+		return hover.get();
 	}
 
+	@Override
 	public boolean isDisabled() {
 		return disabled;
 	}
 
+	@Override
 	public ButtonElement setDisabled(boolean disabled) {
 		this.disabled = disabled;
 		return this;
 	}
 
+	@Override
 	public Set<ActionListener> getListeners() {
 		return listeners;
 	}
 
-	public ButtonElement addListener(ActionListener evt) {
-		listeners.add(evt);
-		return this;
-	}
-
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		if (hover && !disabled) {
+		if (isHovered() && !disabled) {
 			AssetManager.playCue("menu_click");
 			for (ActionListener listener : listeners) {
 				listener.actionPerformed(new ActionEvent(ButtonElement.this, e.getID(), null));
@@ -95,20 +74,16 @@ public class ButtonElement extends MouseAdapter {
 
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		hover = bounds.contains(e.getPoint());
-		if (hover && !disabled && !changed) {
+		hover.set(!disabled && bounds.contains(e.getPoint()));
+		if (hover.get() && hover.changed()) {
 			AssetManager.playCue("menu_move");
-			changed = true;
-		}
-
-		if (!hover) {
-			changed = false;
 		}
 	}
 
+	@Override
 	public void render(Graphics2D g2d, int x, int y) {
-		g2d.setStroke(new BasicStroke(hover && !disabled ? 3 : 1));
-		g2d.setFont(context.getFont().deriveFont(hover && !disabled ? Font.BOLD : Font.PLAIN, 25));
+		g2d.setStroke(new BasicStroke(isHovered() ? 3 : 1));
+		g2d.setFont(context.getFont().deriveFont(isHovered() ? Font.BOLD : Font.PLAIN, 25));
 		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
 
 		setLocation(x, y);
@@ -120,6 +95,7 @@ public class ButtonElement extends MouseAdapter {
 		);
 	}
 
+	@Override
 	public void dispose() {
 		context.removeMouseListener(this);
 		context.removeMouseMotionListener(this);

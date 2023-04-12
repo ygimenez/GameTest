@@ -1,5 +1,7 @@
 package com.kuuhaku;
 
+import com.kuuhaku.utils.Utils;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;

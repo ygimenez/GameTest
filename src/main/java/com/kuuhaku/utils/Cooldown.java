@@ -1,4 +1,4 @@
-package com.kuuhaku;
+package com.kuuhaku.utils;
 
 import com.kuuhaku.view.GameRuntime;
 

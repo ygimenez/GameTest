@@ -1,6 +1,6 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.AssetManager;
+import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.view.GameRuntime;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.interfaces.IDynamic;

@@ -1,8 +1,8 @@
 package com.kuuhaku.entities.enemies;
 
-import com.kuuhaku.AssetManager;
-import com.kuuhaku.Cooldown;
-import com.kuuhaku.Utils;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Cooldown;
+import com.kuuhaku.utils.Utils;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.pickups.HealthPickup;

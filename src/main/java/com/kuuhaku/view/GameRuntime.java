@@ -1,13 +1,14 @@
 package com.kuuhaku.view;
 
-import com.kuuhaku.AssetManager;
+import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.Renderer;
-import com.kuuhaku.Utils;
+import com.kuuhaku.utils.Utils;
 import com.kuuhaku.entities.Ship;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.enemies.Invader;
 import com.kuuhaku.entities.enemies.Mothership;
+import com.kuuhaku.enums.SoundType;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.interfaces.ITrackable;
@@ -82,14 +83,14 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		theme = AssetManager.getAudio("theme");
 		if (theme != null) {
 			FloatControl gain = (FloatControl) theme.getControl(FloatControl.Type.MASTER_GAIN);
-			gain.setValue(20 * (float) Math.log10(0.25));
+			gain.setValue(Utils.toDecibels(SoundType.MUSIC, 0.25f));
 			theme.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 
 		bossTheme = AssetManager.getAudio("boss_theme");
 		if (bossTheme != null) {
 			FloatControl gain = (FloatControl) bossTheme.getControl(FloatControl.Type.MASTER_GAIN);
-			gain.setValue(20 * (float) Math.log10(0));
+			gain.setValue(Utils.toDecibels(0));
 			bossTheme.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 
@@ -98,7 +99,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				.setText("MAIN MENU");
 
 		back.addListener(e -> {
-			from.switchTo(this);
+			from.switchTo(null);
 			back.dispose();
 			entities.clear();
 			simulation.interrupt();
@@ -261,7 +262,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 							Utils.drawAlignedString(g2d, ">",
 									safe.width - 20,
 									entity.getY() + entity.getHeight() / 2,
-									Utils.ALIGN_LEFT, Utils.ALIGN_CENTER
+									Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
 							);
 						}
 					}
