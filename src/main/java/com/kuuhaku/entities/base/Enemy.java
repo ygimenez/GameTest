@@ -101,7 +101,7 @@ public abstract class Enemy extends Entity implements IDynamic, ITrackable {
 	public void update() {
 		move();
 
-		for (Entity entity : getParent().getReadOnlyEntities()) {
+		for (Entity entity : getParent().getEntities()) {
 			if (entity instanceof IProjectile) continue;
 
 			if (hit(entity)) {

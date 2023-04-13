@@ -25,7 +25,7 @@ public abstract class SettingsManager {
 		return get(key, "");
 	}
 
-	public static String get(String key, String defaultValue) {
+	public static String get(String key, Object defaultValue) {
 		String prop = props.getProperty(key);
 		if (prop == null) {
 			set(key, defaultValue);
@@ -36,7 +36,7 @@ public abstract class SettingsManager {
 	}
 
 	public static void set(String key, Object value) {
-		props.setProperty(key, String.valueOf(value));
+		props.setProperty(key, String.valueOf(value).toLowerCase());
 
 		try (OutputStream os = Files.newOutputStream(file.toPath())) {
 			props.store(os, null);

@@ -28,7 +28,7 @@ public abstract class Pickup extends Entity implements IDynamic, IProjectile {
 	public void update() {
 		getBounds().translate(0, 0.2);
 
-		for (Entity entity : getParent().getReadOnlyEntities()) {
+		for (Entity entity : getParent().getEntities()) {
 			if (!(entity instanceof Ship s)) continue;
 
 			if (hit(entity)) {

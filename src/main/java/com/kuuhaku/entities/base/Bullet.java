@@ -8,9 +8,9 @@ import com.kuuhaku.interfaces.IProjectile;
 
 public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 	private final Entity owner;
-	private final double speed;
 	private final double[] vector;
 	private final int damage;
+	private double speed;
 
 	public Bullet(Entity owner, String sprite, int damage, double speed, double angle) {
 		super(sprite, 1);
@@ -39,7 +39,7 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 	public void update() {
 		getBounds().translate(vector[0] * speed, vector[1] * speed);
 
-		for (Entity entity : getParent().getReadOnlyEntities()) {
+		for (Entity entity : getParent().getEntities()) {
 			if (entity instanceof IProjectile) continue;
 
 			if (hit(entity)) {
@@ -56,5 +56,13 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 		if (!getBounds().intersect(getParent().getSafeArea())) return false;
 
 		return (other instanceof Ship == !(owner instanceof Ship)) && getBounds().intersect(other.getBounds());
+	}
+
+	protected double getSpeed() {
+		return speed;
+	}
+
+	protected void setSpeed(double speed) {
+		this.speed = speed;
 	}
 }

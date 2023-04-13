@@ -1,19 +1,19 @@
 package com.kuuhaku.entities.enemies;
 
-import com.kuuhaku.manager.AssetManager;
-import com.kuuhaku.utils.Cooldown;
-import com.kuuhaku.utils.Utils;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.pickups.HealthPickup;
 import com.kuuhaku.entities.projectiles.EnemyBullet;
+import com.kuuhaku.entities.projectiles.EnemyAccelBullet;
 import com.kuuhaku.entities.projectiles.MothershipBarrage;
 import com.kuuhaku.entities.projectiles.MothershipLaser;
 import com.kuuhaku.interfaces.IProjectile;
 import com.kuuhaku.interfaces.Managed;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Cooldown;
+import com.kuuhaku.utils.Utils;
 import com.kuuhaku.view.GameRuntime;
 
-import javax.sound.sampled.Clip;
 import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -34,7 +34,7 @@ public class Mothership extends Enemy {
 	private final List<Runnable> rotation = new ArrayList<>();
 
 	public Mothership(GameRuntime parent) {
-		super(parent, "boss_2", (int) (3000 * (1 + parent.getRound() / 20) + parent.getTick() / 20), 5, 0);
+		super(parent, "boss_2", (int) (3000 * (1 + parent.getRound() / 20) + parent.getTick() / 20), 2, 0);
 		this.baseHp = getHp();
 		this.primary = new Cooldown(parent, 2500 / getFireRate());
 		this.attack = new Cooldown(parent, 1000);
@@ -79,7 +79,7 @@ public class Mothership extends Enemy {
 			resumed = true;
 		}
 
-		for (Entity entity : getParent().getReadOnlyEntities()) {
+		for (Entity entity : getParent().getEntities()) {
 			if (entity instanceof IProjectile) continue;
 
 			if (hit(entity)) {
@@ -123,34 +123,20 @@ public class Mothership extends Enemy {
 	}
 
 	private void laserBeam() {
-		Clip cue = AssetManager.getAudio("mothership_laser");
-		if (cue != null) {
-			cue.loop(Clip.LOOP_CONTINUOUSLY);
-		}
+		Rectangle safe = getParent().getSafeArea();
+		for (int i = 0; i < (enraged ? 10 : 5); i++, angle++) {
+			if (getHp() == 0) return;
 
-		angle = 0;
-		if (enraged) {
-			for (int i = 0; i < 180; i++, angle++) {
-				if (getHp() == 0) return;
+			int hole = ThreadLocalRandom.current().nextInt(20);
 
-				double cos = Math.cos(Math.toRadians(angle));
-				getParent().spawn(
-						new MothershipLaser(this, 90 - 75 * cos),
-						new MothershipLaser(this, 270 + 75 * cos)
-				);
-				Utils.await(getParent(), 2);
+			AssetManager.playCue("enemy_fire");
+			for (int j = 0; j < 30; j++) {
+				if (Utils.between(j, hole - 1, hole + 1)) continue;
+
+				getParent().spawn(new MothershipLaser(this, safe.width / 30 * j, 180));
 			}
-		} else {
-			for (int i = 0; i < 180; i++, angle++) {
-				if (getHp() == 0) return;
 
-				getParent().spawn(new MothershipLaser(this, 180 + 45 * Math.cos(Math.toRadians(angle))));
-				Utils.await(getParent(), 2);
-			}
-		}
-
-		if (cue != null) {
-			cue.stop();
+			Utils.await(getParent(), 400);
 		}
 	}
 
@@ -160,13 +146,11 @@ public class Mothership extends Enemy {
 			if (getHp() == 0) return;
 
 			AssetManager.playCue("enemy_fire");
-			getParent().spawn(
-					new EnemyBullet(this, 0.5, angle + angle * 10),
-					new EnemyBullet(this, 0.5, angle + 90 + angle * 10),
-					new EnemyBullet(this, 0.5, angle + 180 + angle * 10),
-					new EnemyBullet(this, 0.5, angle + 270 + angle * 10)
-			);
-			Utils.await(getParent(), enraged ? 30 : 50);
+			for (int j = 0; j < 4; j++) {
+				getParent().spawn(new EnemyAccelBullet(this, 0, angle * 1.5 + 90 * j + angle * 10));
+			}
+
+			Utils.await(getParent(), enraged ? 15 : 25);
 		}
 	}
 
@@ -175,15 +159,16 @@ public class Mothership extends Enemy {
 		for (int i = 0; i < (enraged ? 15 : 10); i++, angle++) {
 			if (getHp() == 0) return;
 
+			int bullets = safe.height / 100;
 			int offset = ThreadLocalRandom.current().nextInt(safe.height / 3 * 2);
 			boolean left = ThreadLocalRandom.current().nextBoolean();
 
 			AssetManager.playCue("enemy_fire");
-			for (int j = 0; j < 8; j++) {
-				getParent().spawn(new MothershipBarrage(this, left, offset + j * 25, left ? 90 : 270));
+			for (int j = 0; j < bullets; j++) {
+				getParent().spawn(new MothershipBarrage(this, left, offset + j * 30, left ? 90 : 270));
 			}
 
-			Utils.await(getParent(), enraged ? 150 : 200);
+			Utils.await(getParent(), enraged ? 120 : 200);
 		}
 	}
 
@@ -224,5 +209,9 @@ public class Mothership extends Enemy {
 			getParent().spawn(new HealthPickup(this));
 			enraged = true;
 		}
+	}
+
+	public boolean isEnraged() {
+		return enraged;
 	}
 }

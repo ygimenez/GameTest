@@ -1,6 +1,7 @@
 package com.kuuhaku.ui;
 
 import com.kuuhaku.enums.InputType;
+import com.kuuhaku.interfaces.IElement;
 import com.kuuhaku.manager.SettingsManager;
 import com.kuuhaku.utils.Utils;
 
@@ -8,7 +9,7 @@ import java.awt.*;
 
 public class ConfigField {
 	private final String id;
-	private final InputElement input;
+	private final IElement<?> field;
 	private final LabelElement label;
 	private final InputType type;
 
@@ -18,45 +19,51 @@ public class ConfigField {
 		this.id = id;
 		this.type = type;
 
-		this.input = new InputElement(context)
-				.setValidator((oldVal, newVal) -> switch (type) {
-					case TEXT -> maxLength == -1 || newVal.length() <= maxLength ? newVal : oldVal;
-					case NUMERIC -> {
-						if (newVal.isBlank()) {
-							yield "0";
-						}
+		if (type == InputType.TOGGLE) {
+			this.field = new ToggleElement(context)
+					.addListener(e -> SettingsManager.set(id, e.getActionCommand()));
+		} else {
+			this.field = new InputElement(context)
+					.setValidator((oldVal, newVal) -> switch (type) {
+						case TEXT -> maxLength == -1 || newVal.length() <= maxLength ? newVal : oldVal;
+						case NUMERIC -> {
+							if (newVal.isBlank()) {
+								yield "0";
+							}
 
-						try {
-							yield String.valueOf(Integer.parseInt(newVal));
-						} catch (NumberFormatException e) {
-							yield oldVal;
+							try {
+								yield String.valueOf(Integer.parseInt(newVal));
+							} catch (NumberFormatException e) {
+								yield oldVal;
+							}
 						}
-					}
-					case PERCENT -> {
-						if (newVal.isBlank()) {
-							yield "0";
-						}
+						case PERCENT -> {
+							if (newVal.isBlank()) {
+								yield "0";
+							}
 
-						try {
-							int val = Integer.parseInt(newVal);
-							yield String.valueOf(Utils.clamp(val, 0, 100));
-						} catch (NumberFormatException e) {
-							yield oldVal;
+							try {
+								int val = Integer.parseInt(newVal);
+								yield String.valueOf(Utils.clamp(val, 0, 100));
+							} catch (NumberFormatException e) {
+								yield oldVal;
+							}
 						}
-					}
-				})
-				.addListener(e -> SettingsManager.set(id, e.getActionCommand()))
-				.setText(SettingsManager.get(id));
+						default -> throw new IllegalStateException();
+					})
+					.addListener(e -> SettingsManager.set(id, e.getActionCommand()))
+					.setText(SettingsManager.get(id));
+		}
 
-		this.label = new LabelElement(context, input);
+		this.label = new LabelElement(context, field);
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public InputElement getInput() {
-		return input;
+	public IElement<?> getField() {
+		return field;
 	}
 
 	public LabelElement getLabel() {
@@ -76,12 +83,12 @@ public class ConfigField {
 	}
 
 	public void render(Graphics2D g2d, int x, int y) {
-		input.render(g2d, x, y);
+		field.render(g2d, x, y);
 		label.render(g2d, x, y);
 	}
 
 	public void dispose() {
-		input.dispose();
+		field.dispose();
 		label.dispose();
 	}
 }

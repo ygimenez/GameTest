@@ -19,7 +19,6 @@ public class Destroyer extends Enemy {
 	private final int baseHp;
 	private final Cooldown primary, secondary;
 	private boolean left, enraged, alternate;
-	private int angle = 0;
 
 	public Destroyer(GameRuntime parent) {
 		super(parent, "boss_1", (int) (2000 * (1 + parent.getRound() / 10) + parent.getTick() / 20), 12, 3);
@@ -49,7 +48,7 @@ public class Destroyer extends Enemy {
 	public void update() {
 		move();
 
-		for (Entity entity : getParent().getReadOnlyEntities()) {
+		for (Entity entity : getParent().getEntities()) {
 			if (entity instanceof IProjectile) continue;
 
 			if (hit(entity)) {

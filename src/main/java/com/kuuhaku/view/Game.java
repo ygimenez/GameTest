@@ -10,13 +10,17 @@ import java.awt.*;
 import java.util.List;
 
 public class Game extends JFrame implements IMenu {
-	private final Renderer renderer = new Renderer(60);
+	private final Renderer renderer = new Renderer(80);
 
 	@Override
 	public void switchTo(IMenu from) {
 		ButtonElement play = new ButtonElement(renderer)
 				.setSize(250, 50)
 				.setText("PLAY");
+
+		ButtonElement train = new ButtonElement(renderer)
+				.setSize(250, 50)
+				.setText("TRAINING");
 
 		ButtonElement settings = new ButtonElement(renderer)
 				.setSize(250, 50)
@@ -27,14 +31,23 @@ public class Game extends JFrame implements IMenu {
 				.setText("EXIT");
 
 		play.addListener(e -> {
-			new GameRuntime(renderer).switchTo(this);
+			new GameRuntime(renderer, null).switchTo(this);
 			play.dispose();
+			train.dispose();
+			settings.dispose();
+			close.dispose();
+		});
+		train.addListener(e -> {
+			new Training(renderer).switchTo(this);
+			play.dispose();
+			train.dispose();
 			settings.dispose();
 			close.dispose();
 		});
 		settings.addListener(e -> {
 			new Settings(renderer).switchTo(this);
 			play.dispose();
+			train.dispose();
 			settings.dispose();
 			close.dispose();
 		});
@@ -49,7 +62,7 @@ public class Game extends JFrame implements IMenu {
 			Utils.drawAlignedString(g2d, "SPACE BREACH", renderer.getWidth() / 2, 100, Utils.ALIGN_CENTER);
 
 			int i = 0;
-			for (ButtonElement btn : List.of(play, settings, close)) {
+			for (ButtonElement btn : List.of(play, train, settings, close)) {
 				btn.render(g2d, renderer.getWidth() / 2 - btn.getWidth() / 2, renderer.getHeight() / 2 - 50 + 60 * i++);
 			}
 
