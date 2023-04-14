@@ -46,6 +46,13 @@ public class Ship extends Entity implements IDynamic {
 		getBounds().translate(dx, dy);
 	}
 
+	@Override
+	public int getHp() {
+		if (parent.isTraining()) return 1;
+
+		return super.getHp();
+	}
+
 	public double getFireRate() {
 		return fireRate;
 	}

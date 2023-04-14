@@ -1,13 +1,12 @@
 package com.kuuhaku.entities.enemies;
 
+import com.kuuhaku.entities.base.Enemy;
+import com.kuuhaku.entities.pickups.HealthPickup;
+import com.kuuhaku.entities.projectiles.DestroyerTorpedo;
+import com.kuuhaku.entities.projectiles.EnemyBullet;
+import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Cooldown;
-import com.kuuhaku.entities.base.Enemy;
-import com.kuuhaku.entities.base.Entity;
-import com.kuuhaku.entities.pickups.HealthPickup;
-import com.kuuhaku.entities.projectiles.EnemyBullet;
-import com.kuuhaku.interfaces.IProjectile;
-import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.view.GameRuntime;
 
 import java.awt.*;
@@ -17,14 +16,16 @@ import java.util.concurrent.TimeUnit;
 @Managed
 public class Destroyer extends Enemy {
 	private final int baseHp;
-	private final Cooldown primary, secondary;
-	private boolean left, enraged, alternate;
+	private final Cooldown primary, secondary, torpedo;
+	private boolean inPlace, left, enraged, alternate;
+	private int torpLimit = 1;
 
 	public Destroyer(GameRuntime parent) {
 		super(parent, "boss_1", (int) (2000 * (1 + parent.getRound() / 10) + parent.getTick() / 20), 12, 3);
 		this.baseHp = getHp();
 		this.primary = new Cooldown(parent, 2500 / getFireRate());
 		this.secondary = new Cooldown(parent, 250 / getFireRate());
+		this.torpedo = new Cooldown(parent, 5000 / getFireRate());
 	}
 
 	@Override
@@ -39,27 +40,19 @@ public class Destroyer extends Enemy {
 			if ((left && getX() <= safe.width / 4) || (!left && getX() >= safe.width / 4 * 3)) {
 				left = !left;
 			}
+
+			inPlace = true;
 		}
 	}
 
-
-
 	@Override
-	public void update() {
-		move();
-
-		for (Entity entity : getParent().getEntities()) {
-			if (entity instanceof IProjectile) continue;
-
-			if (hit(entity)) {
-				int eHp = entity.getHp();
-				entity.setHp(entity.getHp() - getHp());
-				setHp(getHp() - eHp);
-				break;
+	public void attack() {
+		if (inPlace) {
+			if (torpLimit > 0 && torpedo.use()) {
+				getParent().spawn(new DestroyerTorpedo(this, 0.2));
+				torpLimit--;
 			}
-		}
 
-		if (getBounds().intersect(getParent().getSafeArea())) {
 			if (enraged) {
 				if (primary.use()) {
 					AssetManager.playCue("enemy_fire");
@@ -115,6 +108,15 @@ public class Destroyer extends Enemy {
 			getParent().spawn(new HealthPickup(this));
 			getParent().spawn(new HealthPickup(this));
 			enraged = true;
+			torpLimit++;
 		}
+	}
+
+	public int getTorpLimit() {
+		return torpLimit;
+	}
+
+	public void setTorpLimit(int torpLimit) {
+		this.torpLimit = torpLimit;
 	}
 }

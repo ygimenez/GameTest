@@ -1,6 +1,7 @@
 package com.kuuhaku.utils;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 
 public class Coordinates {
 	private double x, y;
@@ -23,6 +24,10 @@ public class Coordinates {
 
 	public int getY() {
 		return (int) y;
+	}
+
+	public Point2D getCenter() {
+		return new Point2D.Double(x + width / 2d, y + height / 2d);
 	}
 
 	public int getWidth() {

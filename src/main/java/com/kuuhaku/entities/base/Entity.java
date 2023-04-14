@@ -4,6 +4,7 @@ import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Coordinates;
 import com.kuuhaku.view.GameRuntime;
 
+import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -44,6 +45,10 @@ public abstract class Entity {
 
 	public int getY() {
 		return bounds.getY();
+	}
+
+	public Point2D getCenter() {
+		return bounds.getCenter();
 	}
 
 	public int getWidth() {

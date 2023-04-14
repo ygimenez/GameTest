@@ -239,6 +239,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				g2d.drawString("Audio cues: " + AssetManager.getAudioInstances(), 10, 80);
 				g2d.drawString("Difficulty: " + tick / 1000, 10, 120);
 
+				back.setDisabled(!(gameover || paused));
+
 				if (!isTraining()) {
 					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
 					g2d.drawString("HP: " + player.getHp(), 10, renderer.getHeight() - 70);
@@ -246,17 +248,17 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 					g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
 					g2d.drawString("Highscore: " + highscore, 10, renderer.getHeight() - 10);
 
-					back.setDisabled(!(gameover || paused));
-
 					if (gameover) {
 						g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
 						Utils.drawAlignedString(g2d, "GAME OVER", renderer.getWidth() / 2, renderer.getHeight() / 3, Utils.ALIGN_CENTER);
 						back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
-					} else if (paused) {
-						g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
-						Utils.drawAlignedString(g2d, "PAUSED", renderer.getWidth() / 2, renderer.getHeight() / 3, Utils.ALIGN_CENTER);
-						back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
 					}
+				}
+
+				if (paused) {
+					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
+					Utils.drawAlignedString(g2d, "PAUSED", renderer.getWidth() / 2, renderer.getHeight() / 3, Utils.ALIGN_CENTER);
+					back.render(g2d, renderer.getWidth() / 2 - back.getWidth() / 2, renderer.getHeight() / 3 + 50);
 				}
 			}
 

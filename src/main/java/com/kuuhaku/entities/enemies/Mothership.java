@@ -3,11 +3,10 @@ package com.kuuhaku.entities.enemies;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.pickups.HealthPickup;
-import com.kuuhaku.entities.projectiles.EnemyBullet;
 import com.kuuhaku.entities.projectiles.EnemyAccelBullet;
+import com.kuuhaku.entities.projectiles.EnemyBullet;
 import com.kuuhaku.entities.projectiles.MothershipBarrage;
 import com.kuuhaku.entities.projectiles.MothershipLaser;
-import com.kuuhaku.interfaces.IProjectile;
 import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Cooldown;
@@ -28,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 public class Mothership extends Enemy {
 	private final int baseHp;
 	private final Cooldown primary, attack;
-	private boolean spawned, inPlace, resumed, enraged;
+	private boolean spawned, inPlace, enraged;
 	private int angle = 0;
 
 	private final List<Runnable> rotation = new ArrayList<>();
@@ -69,35 +68,15 @@ public class Mothership extends Enemy {
 		);
 	}
 
-
 	@Override
-	public void update() {
-		move();
-
-		if (inPlace && !resumed) {
-			attack.resume();
-			resumed = true;
-		}
-
-		for (Entity entity : getParent().getEntities()) {
-			if (entity instanceof IProjectile) continue;
-
-			if (hit(entity)) {
-				int eHp = entity.getHp();
-				entity.setHp(entity.getHp() - getHp());
-				setHp(getHp() - eHp);
-				break;
-			}
-		}
-
-		if (getBounds().intersect(getParent().getSafeArea())) {
+	public void attack() {
+		if (inPlace) {
 			if (enraged && primary.use()) {
 				Entity player = getParent().getPlayer();
-				double dx = (player.getX() + player.getWidth() / 2d) - (getX() + getWidth() / 2d);
-				double dy = (player.getY() + player.getHeight() / 2d) - (getY() + getHeight() / 2d);
-
 				AssetManager.playCue("enemy_fire");
-				getParent().spawn(new EnemyBullet(this, 1, 90 + Math.toDegrees(Math.atan2(dy, dx))));
+				getParent().spawn(new EnemyBullet(this, 1,
+						90 + Utils.vecToAng(getCenter(), player.getCenter())
+				));
 			}
 
 			if (attack.use()) {
@@ -177,13 +156,12 @@ public class Mothership extends Enemy {
 		for (int i = 0; i < (enraged ? 3 : 2); i++) {
 			if (getHp() == 0) return;
 
-			double dx = (player.getX() + player.getWidth() / 2d) - (getX() + getWidth() / 2d);
-			double dy = (player.getY() + player.getHeight() / 2d) - (getY() + getHeight() / 2d);
-
 			AssetManager.playCue("enemy_fire");
 			for (int j = 0; j < 5; j++) {
 				double step = 20d / (5 + 1);
-				getParent().spawn(new EnemyBullet(this, 1, 90 + Math.toDegrees(Math.atan2(dy, dx)) + -20 / 2d + step * (j + 1)));
+				getParent().spawn(new EnemyBullet(this, 1,
+						90 + Utils.vecToAng(getCenter(), player.getCenter()) + -20 / 2d + step * (j + 1)
+				));
 			}
 
 			Utils.await(getParent(), enraged ? 50 : 100);

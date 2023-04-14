@@ -6,6 +6,7 @@ import com.kuuhaku.view.GameRuntime;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.io.File;
 import java.lang.annotation.Annotation;
 import java.net.URL;
@@ -180,5 +181,9 @@ public abstract class Utils {
 		}
 
 		return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
+	}
+
+	public static double vecToAng(Point2D a, Point2D b) {
+		return Math.toDegrees(Math.atan2(a.getY() - b.getY(), a.getX() - b.getX()));
 	}
 }

@@ -67,14 +67,21 @@ public class Training implements IMenu {
 
 			int i = 0;
 			for (Map.Entry<Enemy, ButtonElement> e : buttons.entrySet()) {
+				Enemy enemy = e.getKey();
+				ButtonElement btn = e.getValue();
+
 				int y = 100 + 210 * (i / 6);
-				int sections = Math.min(buttons.size() - 6 * y, 6);
+				int sections = Math.min(buttons.size() - 6 * (i / 6), 6);
 
 				int gap = (renderer.getWidth() - 40) / sections;
-				int x = 20 + gap * (i % 6) + (gap / 2 - e.getKey().getWidth() / 2);
+				int x = 20 + gap * (i % 6) + (gap / 2 - btn.getWidth() / 2);
 
-				g2d.drawImage(e.getKey().getSprite(), x, y, null);
-				e.getValue().setLocation(x, y);
+				e.getValue().render(g2d, x, y);
+				g2d.drawImage(enemy.getSprite(),
+						btn.getX() + btn.getWidth() / 2 - enemy.getWidth() / 2,
+						btn.getY() + btn.getHeight() / 2 - enemy.getHeight() / 2,
+						null
+				);
 
 				i++;
 			}

@@ -113,12 +113,16 @@ public abstract class Enemy extends Entity implements IDynamic, ITrackable {
 		}
 
 		if (getBounds().intersect(getParent().getSafeArea())) {
-			if (bullets > 0 && cooldown.use()) {
-				AssetManager.playCue("enemy_fire");
-				for (int i = 0; i < bullets; i++) {
-					double step = 45d / (bullets + 1);
-					parent.spawn(new EnemyBullet(this, 1, 180 + -45 / 2d + step * (i + 1)));
-				}
+			attack();
+		}
+	}
+
+	public void attack() {
+		if (bullets > 0 && cooldown.use()) {
+			AssetManager.playCue("enemy_fire");
+			for (int i = 0; i < bullets; i++) {
+				double step = 45d / (bullets + 1);
+				parent.spawn(new EnemyBullet(this, 1, 180 + -45 / 2d + step * (i + 1)));
 			}
 		}
 	}

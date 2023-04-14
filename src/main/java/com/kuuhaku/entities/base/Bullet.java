@@ -58,11 +58,19 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 		return (other instanceof Ship == !(owner instanceof Ship)) && getBounds().intersect(other.getBounds());
 	}
 
+	protected Entity getOwner() {
+		return owner;
+	}
+
 	protected double getSpeed() {
 		return speed;
 	}
 
 	protected void setSpeed(double speed) {
 		this.speed = speed;
+	}
+
+	protected int getDamage() {
+		return damage;
 	}
 }
