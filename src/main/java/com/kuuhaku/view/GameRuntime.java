@@ -79,7 +79,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 		entities.add(player);
 		Thread simulation = new Thread(() -> {
-			double simrate = renderer.getFramerate() / 4;
+			double simrate = 2;
 			while (!Thread.interrupted()) {
 				process();
 				lastSimu = System.currentTimeMillis();
