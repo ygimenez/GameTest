@@ -10,7 +10,7 @@ import java.awt.*;
 import java.util.List;
 
 public class Game extends JFrame implements IMenu {
-	private final Renderer renderer = new Renderer(80);
+	private final Renderer renderer = new Renderer();
 
 	@Override
 	public void switchTo(IMenu from) {

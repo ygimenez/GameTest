@@ -18,7 +18,7 @@ public class Cooldown {
 	}
 
 	public boolean use() {
-		if (paused) return false;
+		if (paused || parent.isGameover()) return false;
 
 		long tick = parent.getTick() - pauseOffset;
 		if (tick - lastUse > time) {

@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Settings implements IMenu {
-	private static final String[] settings = {"nmaster_volume", "neffect_volume", "nmusic_volume", "twindow_mode", "twindow_size"};
+	private static final String[] settings = {"pmaster_volume", "peffect_volume", "pmusic_volume", "twindow_mode", "twindow_size", "nframerate"};
 	private final Renderer renderer;
 
 	public Settings(Renderer renderer) {
@@ -66,6 +66,7 @@ public class Settings implements IMenu {
 		}
 
 		back.addListener(e -> {
+			renderer.updateSettings();
 			from.switchTo(null);
 			back.dispose();
 

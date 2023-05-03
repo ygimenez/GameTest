@@ -18,7 +18,7 @@ public class Renderer extends Canvas {
 	private long lastFrame, frameTime;
 	private double framerate;
 
-	public Renderer(double fps) {
+	public Renderer() {
 		window.setTitle("Space Breach - v0.0.1-ALPHA");
 		window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		window.add(this);
@@ -28,7 +28,7 @@ public class Renderer extends Canvas {
 
 		createBufferStrategy(2);
 
-		framerate = 1000 / fps;
+		framerate = 1000d / Integer.parseInt(SettingsManager.get("framerate", "60"));
 		Thread render = new Thread(() -> {
 			while (!Thread.interrupted()) {
 				if (frame != null && window.isVisible()) {
@@ -97,5 +97,9 @@ public class Renderer extends Canvas {
 
 	public ScreenSize getResolution() {
 		return resolution;
+	}
+
+	public void updateSettings() {
+		framerate = 1000d / Integer.parseInt(SettingsManager.get("framerate", "60"));
 	}
 }

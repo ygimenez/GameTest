@@ -376,6 +376,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		return training != null;
 	}
 
+	public boolean isGameover() {
+		return gameover;
+	}
+
 	public void close() {
 		gameover = true;
 	}
