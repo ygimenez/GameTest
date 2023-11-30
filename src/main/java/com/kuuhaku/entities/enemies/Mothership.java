@@ -20,8 +20,6 @@ public class Mothership extends Boss {
 	private boolean spawned;
 	private int angle = 0;
 
-	private boolean once = false;
-
 	private final List<Runnable> rotation = new ArrayList<>();
 
 	public Mothership(GameRuntime runtime) {
@@ -72,13 +70,14 @@ public class Mothership extends Boss {
 	}
 
 	private void laserSweep() {
-			getRuntime().spawn(new MothershipLaser(this));
-			once = true;
+		getRuntime().spawn(new MothershipLaser(this));
 	}
 
 	private void artillery() {
-		getRuntime().spawn(new MothershipBomb(this));
-		once = true;
+		for (int i = 0; i < 20; i++) {
+			getRuntime().spawn(new MothershipBomb(this));
+			Utils.await(getRuntime(), getCooldown().getTime() / 5);
+		}
 	}
 
 	@Override

@@ -20,7 +20,7 @@ public class ConfigField {
 
 		this.field = switch (type) {
 			case TOGGLE -> new Toggle(context).setValue(SettingsManager.get(id));
-			case PERCENT -> new Slider(context, true).setValue(Integer.parseInt(SettingsManager.get(id)));
+			case PERCENT -> new Slider(context, true).setValue(Integer.parseInt(SettingsManager.get(id, 50)));
 			default -> new Input(context)
 					.setValidator((oldVal, newVal) -> switch (type) {
 						case TEXT -> maxLength == -1 || newVal.length() <= maxLength ? newVal : oldVal;

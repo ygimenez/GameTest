@@ -10,13 +10,17 @@ import com.kuuhaku.interfaces.IParticle;
 import com.kuuhaku.utils.Utils;
 
 import java.awt.*;
+import java.awt.geom.Point2D;
 
 public class MothershipBomb extends Entity implements IDynamic, ICollide {
 	public MothershipBomb(Mothership owner) {
-		super(owner.getRuntime(), owner, new Sprite(owner.getRuntime(), "artillery", 8, 2, 20, false));
+		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "artillery", 8, 2, 20, false));
 
-		Rectangle safe = getRuntime().getSafeArea();
-		getCoordinates().setPosition(Utils.rng().nextFloat(safe.width), Utils.rng().nextFloat(safe.height));
+		float rx = (125 + Utils.rng().nextFloat(50)) * (Utils.rng().nextBoolean() ? -1 : 1);
+		float ry = (125 + Utils.rng().nextFloat(50)) * (Utils.rng().nextBoolean() ? -1 : 1);
+
+		Point2D.Float player = getRuntime().getRandomPlayer().getGlobalCenter();
+		getCoordinates().setPosition(player.x + rx, player.y + ry);
 	}
 
 	@Override
@@ -42,7 +46,7 @@ public class MothershipBomb extends Entity implements IDynamic, ICollide {
 	public boolean hit(Entity other) {
 		if (other instanceof IParticle) return false;
 		else if (!isVisible()) return false;
-		else if (getSprite().getFrame() < 8) return false;
+		else if (!Utils.between(getSprite().getFrame(), 8, 13)) return false;
 
 		return other instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}

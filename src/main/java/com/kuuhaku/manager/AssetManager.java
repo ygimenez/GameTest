@@ -41,7 +41,7 @@ public abstract class AssetManager {
 		URL audioFolder = AssetManager.class.getClassLoader().getResource("audio");
 		if (audioFolder != null) {
 			try (Stream<Path> visitor = Files.walk(Path.of(audioFolder.toURI()))) {
-				visitor.filter(p -> p.getFileName().toString().endsWith(".wav"))
+				visitor.filter(p -> p.getFileName().toString().endsWith(".mp3"))
 						.forEach(p -> {
 							audio.put(p.getFileName().toString().split("\\.")[0], p.toFile());
 						});
