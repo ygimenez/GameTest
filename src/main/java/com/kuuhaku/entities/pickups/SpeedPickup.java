@@ -4,15 +4,17 @@ import com.kuuhaku.entities.Player;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.base.Pickup;
 import com.kuuhaku.interfaces.Managed;
+import com.kuuhaku.interfaces.Metadata;
 
 @Managed
+@Metadata(sprite = "speed")
 public class SpeedPickup extends Pickup {
 	public SpeedPickup(Entity source) {
-		super(source, "speed");
+		super(source);
 	}
 
 	@Override
 	public void addBonus(Player player) {
-		player.setSpeed(player.getSpeed() + 0.1);
+		player.setSpeed(player.getSpeed() + 0.2f);
 	}
 }

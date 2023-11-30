@@ -8,8 +8,8 @@ public class Thruster extends Entity implements IDynamic {
 	private int accel = 0;
 
 	public Thruster(Entity parent) {
-		super(parent.getRuntime(), parent, new Sprite(parent.getRuntime(), "thruster", 4, 2, 20, true), 1);
-//		getBounds().setPosition(getParent().getWidth() / 2d + getWidth() / 2d, 0);
+		super(parent.getRuntime(), parent, new Sprite(parent.getRuntime(), "thruster", 4, 2, 20, true));
+		getCoordinates().setPosition(getParent().getWidth() / 2f - getWidth() / 2f, -getHeight());
 	}
 
 	@Override
@@ -23,5 +23,10 @@ public class Thruster extends Entity implements IDynamic {
 
 	public void setAccel(int value) {
 		this.accel = value;
+	}
+
+	@Override
+	public boolean isCullable() {
+		return false;
 	}
 }

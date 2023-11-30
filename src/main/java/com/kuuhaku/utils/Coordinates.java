@@ -6,31 +6,46 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 
 public class Coordinates {
-	private final double[] pos;
-	private final int[] size;
-	private double angle;
+	private final AffineTransform reference = new AffineTransform();
 
-	private AffineTransform reference = new AffineTransform();
-	protected Shape boundaries;
+	private final float[] pos;
+	private final int[] size;
+	private final float[] anchor;
+	private float angle;
+
+	private Shape boundaries;
+	private AffineTransform parent = new AffineTransform();
 
 	public Coordinates() {
-		this.pos = new double[2];
+		this.pos = new float[2];
 		this.size = new int[2];
+		this.anchor = new float[2];
+		this.boundaries = new Rectangle2D.Float(0, 0, 1, 1);
 	}
 
 	public Coordinates(Rectangle bound) {
-		this.pos = new double[]{bound.x, bound.y};
+		this.pos = new float[]{bound.x, bound.y};
 		this.size = new int[]{bound.width, bound.height};
-		this.boundaries = new Rectangle2D.Double(bound.x, bound.y, bound.width, bound.height);
+		this.anchor = new float[]{bound.width / 2f, bound.height / 2f};
+		this.boundaries = new Rectangle2D.Float(bound.x, bound.y, bound.width, bound.height);
 	}
 
-	public double[] getPosition() {
+	public float[] getPosition() {
 		return pos;
 	}
 
-	public Point2D getCenter() {
-		double[] pos = getPosition();
-		return new Point2D.Double(pos[0] + getWidth() / 2d, pos[1] + getHeight() / 2d);
+	public void setPosition(float x, float y) {
+		pos[0] = x;
+		pos[1] = y;
+	}
+
+	public void translate(float dx, float dy) {
+		setPosition(pos[0] + dx, pos[1] + dy);
+	}
+
+	public Point2D.Float getCenter() {
+		float[] pos = getPosition();
+		return new Point2D.Float(pos[0] + getWidth() / 2f, pos[1] + getHeight() / 2f);
 	}
 
 	public int getWidth() {
@@ -46,33 +61,39 @@ public class Coordinates {
 		size[1] = height;
 	}
 
-	public void setPosition(double x, double y) {
-		pos[0] = x;
-		pos[1] = y;
-		update();
-	}
-
-	public void translate(double dx, double dy) {
-		setPosition(pos[0] + dx, pos[1] + dy);
-	}
-
-	public double getAngle() {
+	public float getAngle() {
 		return angle;
 	}
 
-	public void setAngle(double angle) {
+	public void setAngle(float angle) {
 		this.angle = angle;
-		update();
 	}
 
-	public void rotate(double theta) {
+	public void rotate(float theta) {
 		setAngle(angle + theta);
 	}
 
-	private void update() {
-		AffineTransform at = (AffineTransform) reference.clone();
-		at.rotate(angle, getWidth() / 2d, getHeight() / 2d);
-		boundaries = at.createTransformedShape(new Rectangle2D.Double(0, 0, getWidth(), getHeight()));
+	public float[] getAnchor() {
+		return anchor;
+	}
+
+	public void setAnchor(float x, float y) {
+		anchor[0] = size[0] * x;
+		anchor[1] = size[1] * y;
+	}
+
+	public AffineTransform getTransform() {
+		reference.setTransform(parent);
+		reference.translate(pos[0], pos[1]);
+		reference.rotate(this.angle, anchor[0], anchor[1]);
+
+		return reference;
+	}
+
+	public void update() {
+		boundaries = getTransform().createTransformedShape(new Rectangle2D.Float(
+				0, 0, size[0], size[1]
+		));
 	}
 
 	public Shape getCollision() {
@@ -87,11 +108,7 @@ public class Coordinates {
 		return boundaries.intersects(other.getBounds2D());
 	}
 
-	public AffineTransform getReference() {
-		return reference;
-	}
-
-	public void setReference(Coordinates reference) {
-		this.reference = reference.getReference();
+	public void setParent(Coordinates parent) {
+		this.parent = parent.reference;
 	}
 }

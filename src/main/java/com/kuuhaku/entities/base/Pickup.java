@@ -1,25 +1,27 @@
 package com.kuuhaku.entities.base;
 
 import com.kuuhaku.entities.Player;
+import com.kuuhaku.interfaces.ICollide;
 import com.kuuhaku.interfaces.IDynamic;
-import com.kuuhaku.interfaces.IProjectile;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Utils;
 
-public abstract class Pickup extends Entity implements IDynamic, IProjectile {
-	public Pickup(Entity source, String sprite) {
-		super(source.getRuntime(), null, sprite, 1);
+import java.awt.geom.Point2D;
 
-		double[] pos = source.getPosition();
-		getBounds().setPosition(
-				pos[0] + source.getWidth() / 2d - getWidth() / 2d + Utils.rng().nextDouble(10) - 5,
-				pos[1] + source.getHeight() / 2d - getHeight() / 2d + Utils.rng().nextDouble(10) - 5
+public abstract class Pickup extends Entity implements IDynamic, ICollide {
+	public Pickup(Entity source) {
+		super(source.getRuntime(), null);
+
+		Point2D.Float pos = source.getGlobalCenter();
+		getCoordinates().setPosition(
+				pos.x + source.getWidth() / 2f - getWidth() / 2f + Utils.rng().nextFloat(10) - 5,
+				pos.y + source.getHeight() / 2f - getHeight() / 2f + Utils.rng().nextFloat(10) - 5
 		);
 	}
 
 	@Override
 	public void update() {
-		getBounds().translate(0, 0.2);
+		getCoordinates().translate(0, 0.2f);
 
 		for (Entity entity : getRuntime().getEntities()) {
 			if (!(entity instanceof Player s)) continue;
@@ -35,7 +37,7 @@ public abstract class Pickup extends Entity implements IDynamic, IProjectile {
 
 	@Override
 	public boolean hit(Entity other) {
-		return other instanceof Player && getBounds().intersect(other.getBounds());
+		return other instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}
 
 	public abstract void addBonus(Player player);

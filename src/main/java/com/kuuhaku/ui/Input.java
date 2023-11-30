@@ -19,6 +19,7 @@ public class Input extends MouseAdapter implements IElement<Input, String>, IKey
 	private final Delta<Boolean> focused = new Delta<>(false);
 	private final Delta<Boolean> hover = new Delta<>(false);
 
+	private Color color = Color.WHITE;
 	private String text = "";
 	private BiFunction<String, String, String> validator = (a, b) -> b;
 	private boolean disabled, blip;
@@ -58,6 +59,17 @@ public class Input extends MouseAdapter implements IElement<Input, String>, IKey
 	@Override
 	public Rectangle getBounds() {
 		return bounds;
+	}
+
+	@Override
+	public Color getColor() {
+		return color;
+	}
+
+	@Override
+	public Input setColor(Color color) {
+		this.color = color;
+		return this;
 	}
 
 	@Override
@@ -120,7 +132,7 @@ public class Input extends MouseAdapter implements IElement<Input, String>, IKey
 
 		g2d.setStroke(new BasicStroke(isFocused() ? 3 : 1));
 		g2d.setFont(context.getFont().deriveFont(isFocused() ? Font.BOLD : Font.PLAIN, 25));
-		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
+		g2d.setColor(disabled ? color.darker() : color);
 
 		if (isFocused()) {
 			FontMetrics fm = g2d.getFontMetrics();

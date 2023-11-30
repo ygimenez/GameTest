@@ -12,23 +12,23 @@ public class PlayerTrail extends Entity implements IDynamic, IParticle {
 	private int opacity = 200;
 
 	public PlayerTrail(Player parent, int x, int y) {
-		super(parent.getRuntime());
+		super(parent.getRuntime(), null);
 		this.owner = parent;
 
-		Point2D coords = parent.localToGlobal(x, y);
-		getBounds().setPosition(coords.getX(), coords.getY());
+		Point2D.Float coords = parent.toLocal(x, y);
+		getCoordinates().setPosition(coords.x, coords.y);
 	}
 
 	@Override
 	public void update() {
-		getBounds().translate(0, owner.getSpeed());
-		if (--opacity == 0) {
+		getCoordinates().translate(0, owner.getSpeed());
+		if ((opacity -= 2) == 0) {
 			setHp(0);
 		}
 	}
 
 	@Override
 	public int getColor() {
-		return (opacity << 24) | 0xFFFFFF;
+		return (opacity << 24) | (getRuntime().getForeground().getRGB() & 0xFFFFFF);
 	}
 }

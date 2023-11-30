@@ -18,6 +18,7 @@ public class Slider extends MouseAdapter implements IElement<Slider, Integer>, I
 	private final Delta<Boolean> hover = new Delta<>(false);
 	private final boolean showValue;
 
+	private Color color = Color.WHITE;
 	private int value;
 	private boolean disabled;
 
@@ -47,6 +48,17 @@ public class Slider extends MouseAdapter implements IElement<Slider, Integer>, I
 	@Override
 	public Rectangle getBounds() {
 		return bounds;
+	}
+
+	@Override
+	public Color getColor() {
+		return color;
+	}
+
+	@Override
+	public Slider setColor(Color color) {
+		this.color = color;
+		return this;
 	}
 
 	@Override
@@ -109,18 +121,18 @@ public class Slider extends MouseAdapter implements IElement<Slider, Integer>, I
 
 		g2d.setStroke(new BasicStroke(isHovered() ? 3 : 1));
 		g2d.setFont(context.getFont().deriveFont(isHovered() ? Font.BOLD : Font.PLAIN, 25));
-		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
+		g2d.setColor(disabled ? color.darker() : color);
 
 		g2d.fillRect(bounds.x + (bounds.width * value / 100) - 3, bounds.y, 8, bounds.height);
 		g2d.draw(Utils.makePoly(bounds,
-				0, 0.5,
-				0, 0.25,
-				0, 0.75,
-				0, 0.5,
-				1, 0.5,
-				1, 0.75,
-				1, 0.25,
-				1, 0.5
+				0, 0.5f,
+				0, 0.25f,
+				0, 0.75f,
+				0, 0.5f,
+				1, 0.5f,
+				1, 0.75f,
+				1, 0.25f,
+				1, 0.5f
 		));
 
 		if (showValue) {

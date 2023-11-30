@@ -4,7 +4,7 @@ import com.kuuhaku.view.GameRuntime;
 
 public class Cooldown {
 	private final GameRuntime runtime;
-	private int time;
+	private int time, offset;
 	private long lastUse, pauseOffset;
 	private boolean paused;
 
@@ -21,11 +21,19 @@ public class Cooldown {
 		this.time = time;
 	}
 
+	public int getOffset() {
+		return offset;
+	}
+
+	public void setOffset(int offset) {
+		this.offset = offset;
+	}
+
 	public boolean use() {
 		if (paused || runtime.isGameover()) return false;
 
 		long tick = runtime.getTick() - pauseOffset;
-		if (tick - lastUse > time) {
+		if (tick - lastUse > time + offset) {
 			lastUse = tick;
 			return true;
 		}
@@ -41,5 +49,9 @@ public class Cooldown {
 	public void resume() {
 		paused = false;
 		pauseOffset = runtime.getTick() - pauseOffset;
+	}
+
+	public void spend() {
+		lastUse = runtime.getTick() - pauseOffset;
 	}
 }

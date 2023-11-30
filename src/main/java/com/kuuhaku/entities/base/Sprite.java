@@ -16,6 +16,9 @@ public final class Sprite {
 	private Coordinates coordinates;
 	private long start;
 	private int track = -1;
+	private Color color;
+
+	private BufferedImage cached;
 
 	public Sprite(GameRuntime runtime, String name) {
 		this.runtime = runtime;
@@ -24,6 +27,7 @@ public final class Sprite {
 		this.gridY = 1;
 		this.delay = (int) runtime.getFPS();
 		this.loop = false;
+		color = runtime.getForeground();
 	}
 
 	public Sprite(GameRuntime runtime, String name, int gridX, int gridY, int delay, boolean loop) {
@@ -33,6 +37,7 @@ public final class Sprite {
 		this.gridY = gridY;
 		this.delay = delay;
 		this.loop = loop;
+		color = runtime.getForeground();
 	}
 
 	public boolean hasImage() {
@@ -40,7 +45,11 @@ public final class Sprite {
 	}
 
 	public BufferedImage getImage() {
-		BufferedImage source = AssetManager.getSprite(name);
+		BufferedImage source = cached;
+		if (source == null) {
+			source = cached = applyColor(AssetManager.getSprite(name));
+		}
+
 		if (source == null) {
 			return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		} else if (gridX == 1 && gridY == 1) {
@@ -66,10 +75,28 @@ public final class Sprite {
 		}
 	}
 
+	private BufferedImage applyColor(BufferedImage image) {
+		if (image == null) return null;
+
+		BufferedImage out = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = out.createGraphics();
+		g2d.drawImage(image, 0, 0, null);
+
+		g2d.setComposite(AlphaComposite.SrcIn);
+		g2d.setPaint(color);
+		g2d.fillRect(0, 0, image.getWidth(), image.getHeight());
+
+		g2d.dispose();
+
+		return out;
+	}
+
 	public Coordinates getBounds() {
 		if (coordinates == null) {
 			if (hasImage()) {
 				BufferedImage sprite = getImage();
+				assert sprite != null;
+
 				coordinates = new Coordinates(new Rectangle(sprite.getWidth(), sprite.getHeight()));
 			} else {
 				coordinates = new Coordinates();
@@ -91,5 +118,10 @@ public final class Sprite {
 
 	public void setTrack(int track) {
 		this.track = track;
+	}
+
+	public void setColor(Color color) {
+		this.color = color;
+		this.cached = null;
 	}
 }

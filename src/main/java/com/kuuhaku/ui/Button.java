@@ -16,6 +16,7 @@ public class Button extends MouseAdapter implements IElement<Button, String> {
 	private final Canvas context;
 	private final Delta<Boolean> hover = new Delta<>(false);
 
+	private Color color = Color.WHITE;
 	private String text = "";
 	private boolean disabled;
 
@@ -39,6 +40,17 @@ public class Button extends MouseAdapter implements IElement<Button, String> {
 	@Override
 	public Rectangle getBounds() {
 		return bounds;
+	}
+
+	@Override
+	public Color getColor() {
+		return color;
+	}
+
+	@Override
+	public Button setColor(Color color) {
+		this.color = color;
+		return this;
 	}
 
 	@Override
@@ -86,7 +98,7 @@ public class Button extends MouseAdapter implements IElement<Button, String> {
 
 		g2d.setStroke(new BasicStroke(isHovered() ? 3 : 1));
 		g2d.setFont(context.getFont().deriveFont(isHovered() ? Font.BOLD : Font.PLAIN, 25));
-		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
+		g2d.setColor(disabled ? color.darker() : color);
 
 		g2d.draw(bounds);
 		Utils.drawAlignedString(g2d, text,

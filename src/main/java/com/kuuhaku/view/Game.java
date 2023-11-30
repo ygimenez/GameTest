@@ -67,7 +67,7 @@ public class Game extends JFrame implements IMenu {
 			}
 
 			g2d.setFont(renderer.getFont());
-			Utils.drawAlignedString(g2d, "v0.0.1-ALPHA", renderer.getWidth() - 10, renderer.getHeight() - 20, Utils.ALIGN_LEFT);
+			Utils.drawAlignedString(g2d, "v0.0.1f-ALPHA", renderer.getWidth() - 10, renderer.getHeight() - 20, Utils.ALIGN_LEFT);
 		});
 	}
 }

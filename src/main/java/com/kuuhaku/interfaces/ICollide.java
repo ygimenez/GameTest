@@ -2,6 +2,6 @@ package com.kuuhaku.interfaces;
 
 import com.kuuhaku.entities.base.Entity;
 
-public interface IProjectile {
+public interface ICollide {
 	boolean hit(Entity other);
 }

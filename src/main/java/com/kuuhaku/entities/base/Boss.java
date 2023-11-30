@@ -8,14 +8,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public abstract class Boss extends Enemy {
-	private boolean enraged = false;
+	private boolean enraged;
 
-	public Boss(GameRuntime runtime, String sprite, int hp, int fireRate, int bullets) {
-		super(runtime, sprite, hp, fireRate, bullets);
-	}
-
-	public Boss(GameRuntime runtime, Sprite sprite, int hp, int fireRate, int bullets) {
-		super(runtime, sprite, hp, fireRate, bullets);
+	public Boss(GameRuntime runtime, Entity parent, int cooldown) {
+		super(runtime, parent, cooldown);
 	}
 
 	@Override

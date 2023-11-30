@@ -3,8 +3,9 @@ package com.kuuhaku.entities;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.decoration.PlayerTrail;
 import com.kuuhaku.entities.decoration.Thruster;
-import com.kuuhaku.entities.projectiles.PlayerBullet;
+import com.kuuhaku.entities.projectiles.PlayerProjectile;
 import com.kuuhaku.interfaces.IDynamic;
+import com.kuuhaku.interfaces.Metadata;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Cooldown;
 import com.kuuhaku.utils.Utils;
@@ -17,28 +18,29 @@ import java.util.concurrent.TimeUnit;
 
 import static java.awt.event.KeyEvent.*;
 
+@Metadata(sprite = "ship", hp = 200)
 public class Player extends Entity implements IDynamic {
-	private final double[] velocity = {0, 0};
+	private final float[] velocity = {0, 0};
 	private final GameRuntime runtime;
 	private final Cooldown cooldown;
-	private double fireRate = 3;
-	private int bullets = 2;
+	private float fireRate = 3;
+	private int bullets = 1;
 	private int damage = 50;
-	private double speed = 1;
+	private float speed = 1;
 	private int grace = 0;
 
 	public Player(GameRuntime runtime) {
-		super(runtime, null, "ship", 200);
+		super(runtime, null);
 		this.runtime = runtime;
 		this.cooldown = new Cooldown(runtime, (int) (500 / fireRate));
 
-		getBounds().setPosition(runtime.getSafeArea().width / 2d - getWidth() / 2d, runtime.getSafeArea().height - 100);
+		getCoordinates().setPosition(runtime.getSafeArea().width / 2f - getWidth() / 2f, runtime.getSafeArea().height - 100);
 		runtime.spawn(new Thruster(this));
 	}
 
 	@Override
 	public int getHp() {
-		if (runtime.isTraining()) return 1;
+//		if (runtime.isTraining()) return 1;
 
 		return super.getHp();
 	}
@@ -55,11 +57,11 @@ public class Player extends Entity implements IDynamic {
 		}
 	}
 
-	public double getFireRate() {
+	public float getFireRate() {
 		return fireRate;
 	}
 
-	public void setFireRate(double fireRate) {
+	public void setFireRate(float fireRate) {
 		this.fireRate = fireRate;
 	}
 
@@ -71,11 +73,11 @@ public class Player extends Entity implements IDynamic {
 		this.bullets = bullets;
 	}
 
-	public double getSpeed() {
+	public float getSpeed() {
 		return speed;
 	}
 
-	public void setSpeed(double speed) {
+	public void setSpeed(float speed) {
 		this.speed = speed;
 	}
 
@@ -103,15 +105,15 @@ public class Player extends Entity implements IDynamic {
 				runtime.keyValue(VK_W) - runtime.keyValue(VK_S)
 		);
 
-		getBounds().translate(velocity[0], velocity[1]);
+		getCoordinates().translate(velocity[0], velocity[1]);
 
 		if (runtime.keyState(VK_SPACE)) {
-			cooldown.setTime((int) (500 / fireRate));
+			cooldown.setTime(runtime.millisToTick((long) (2000 / fireRate)));
 			if (cooldown.use()) {
 				AssetManager.playCue("ship_fire");
 				for (int i = 0; i < bullets; i++) {
-					double step = 30d / (bullets + 1);
-					runtime.spawn(new PlayerBullet(this, damage * 2 / (bullets + 1), fireRate, -30d / 2 + step * (i + 1)));
+					float step = 30f / (bullets + 1);
+					runtime.spawn(new PlayerProjectile(this, damage * 2 / (bullets + 1), fireRate, -30f / 2 + step * (i + 1)));
 				}
 			}
 		}
@@ -123,12 +125,12 @@ public class Player extends Entity implements IDynamic {
 	}
 
 	public void accelerate(int dx, int dy) {
-		double vx = velocity[0];
-		double vy = velocity[1];
-		double friction = 0.4;
+		float vx = velocity[0];
+		float vy = velocity[1];
+		float friction = 0.4f;
 
-		double sway = -Utils.clamp(vx - ((vx + speed * dx) * friction) / runtime.getFPS(), -1, 1);
-		getBounds().setAngle(Math.toRadians(180 - 30 * sway));
+		float sway = -Utils.clamp(vx - ((vx + speed * dx) * friction) / runtime.getFPS(), -1, 1);
+		getCoordinates().setAngle((float) Math.toRadians(180 - 30 * sway));
 
 		for (Entity child : getChildren()) {
 			if (child instanceof Thruster t) {
@@ -136,16 +138,16 @@ public class Player extends Entity implements IDynamic {
 			}
 		}
 
-		double[] pos = getPosition();
+		float[] pos = getPosition();
 		Rectangle safe = runtime.getSafeArea();
 		if (!Utils.between(pos[0] + vx, safe.x, safe.x + safe.width - getWidth())) {
-			velocity[0] /= -2;
+			velocity[0] *= -1;
 		} else {
 			velocity[0] -= ((vx + speed * dx) * friction) / runtime.getFPS();
 		}
 
 		if (!Utils.between(pos[1] + vy, safe.y, safe.y + safe.height - getHeight())) {
-			velocity[1] /= -2;
+			velocity[1] *= -1;
 		} else {
 			velocity[1] -= ((vy + speed * dy) * friction) / runtime.getFPS();
 		}
@@ -159,5 +161,9 @@ public class Player extends Entity implements IDynamic {
 			AssetManager.playCue("game_over");
 			runtime.close();
 		}, CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS));
+	}
+
+	public void removeGrace() {
+		this.grace = 0;
 	}
 }

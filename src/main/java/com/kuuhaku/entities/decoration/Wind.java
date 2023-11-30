@@ -12,22 +12,22 @@ public class Wind extends Entity implements IDynamic, IParticle {
 	private final Player reference;
 
 	public Wind(Player reference) {
-		super(reference.getRuntime());
+		super(reference.getRuntime(), null);
 		this.reference = reference;
 
 		Rectangle safe = getRuntime().getSafeArea();
-		getBounds().setAngle(Math.toRadians(180));
-		getBounds().setSize(0, (int) (10 * reference.getSpeed()));
-		getBounds().setPosition(safe.x + Utils.rng().nextDouble(safe.width), 0);
+		getCoordinates().setAngle((float) Math.toRadians(180));
+		getCoordinates().setSize(0, (int) (10 * reference.getSpeed()));
+		getCoordinates().setPosition(safe.x + Utils.rng().nextFloat(safe.width), 0);
 	}
 
 	@Override
 	public void update() {
-		getBounds().translate(0, reference.getSpeed() * 2);
+		getCoordinates().translate(0, reference.getSpeed() * 2);
 	}
 
 	@Override
 	public int getColor() {
-		return 0x50FFFFFF;
+		return (0x50 << 24) | (getRuntime().getForeground().getRGB() & 0xFFFFFF);
 	}
 }

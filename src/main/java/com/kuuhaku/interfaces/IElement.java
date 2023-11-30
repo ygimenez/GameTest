@@ -37,6 +37,10 @@ public interface IElement<T extends IElement<T, R>, R> {
 		return (T) this;
 	}
 
+	Color getColor();
+
+	T setColor(Color color);
+
 	boolean isHovered();
 
 	boolean isDisabled();

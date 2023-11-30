@@ -1,5 +1,7 @@
 package com.kuuhaku.entities.base;
 
+import com.kuuhaku.interfaces.IParticle;
+import com.kuuhaku.interfaces.Metadata;
 import com.kuuhaku.utils.Coordinates;
 import com.kuuhaku.utils.Utils;
 import com.kuuhaku.view.GameRuntime;
@@ -16,30 +18,38 @@ public abstract class Entity {
 	private final GameRuntime runtime;
 	private final int id = ThreadLocalRandom.current().nextInt();
 	private final Sprite sprite;
-	private boolean cullable;
 	private int hp, baseHp;
+	private boolean cullable;
 	private boolean disposed;
 
 	private final Entity parent;
 	private final Set<Entity> children = new HashSet<>();
 
-	public Entity(GameRuntime runtime) {
-		this(runtime, null, new Sprite(runtime, null), 1);
+	public Entity(GameRuntime runtime, Entity parent) {
+		this(runtime, parent, null);
 	}
 
-	public Entity(GameRuntime runtime, Entity parent, String sprite, int hp) {
-		this(runtime, parent, new Sprite(runtime, sprite), hp);
-	}
-
-	public Entity(GameRuntime runtime, Entity parent, Sprite sprite, int hp) {
+	public Entity(GameRuntime runtime, Entity parent, Sprite sprite) {
 		this.runtime = runtime;
-		this.sprite = sprite;
-		this.hp = this.baseHp = hp;
+
+		if (this instanceof IParticle) {
+			this.sprite = new Sprite(runtime, null);
+			this.hp = this.baseHp = 1;
+		} else {
+			Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
+			if (info == null) {
+				this.sprite = sprite;
+				this.hp = this.baseHp = 1;
+			} else {
+				this.sprite = new Sprite(runtime, info.sprite());
+				this.hp = this.baseHp = (int) (info.hp() * (this instanceof Enemy ? runtime.getRound() / 5f : 1));
+			}
+		}
 
 		this.parent = parent;
 		if (parent != null) {
+			getCoordinates().setParent(parent.getCoordinates());
 			parent.children.add(this);
-			getBounds().setReference(parent.getBounds());
 		}
 	}
 
@@ -56,31 +66,43 @@ public abstract class Entity {
 	}
 
 	public BufferedImage getImage() {
+		if (parent != null && parent.getImage() == null) return null;
+
 		return sprite.getImage();
 	}
 
-	public Coordinates getBounds() {
+	public Coordinates getCoordinates() {
 		return sprite.getBounds();
 	}
 
-	public double[] getPosition() {
-		return getBounds().getPosition();
+	public float[] getPosition() {
+		return getCoordinates().getPosition();
 	}
 
-	public Point2D getCenter() {
-		return getBounds().getCenter();
+	public Point2D.Float getCenter() {
+		return getCoordinates().getCenter();
+	}
+
+	public Point2D.Float getGlobalCenter() {
+		if (parent == null) return getCenter();
+
+		float[] pos = getPosition();
+		Point2D.Float ref = parent.getCenter();
+		ref.setLocation(ref.x + pos[0], ref.y + pos[1]);
+
+		return ref;
 	}
 
 	public int getWidth() {
-		return getBounds().getWidth();
+		return getCoordinates().getWidth();
 	}
 
 	public int getHeight() {
-		return getBounds().getHeight();
+		return getCoordinates().getHeight();
 	}
 
-	public double getAngle() {
-		return getBounds().getAngle();
+	public float getAngle() {
+		return getCoordinates().getAngle();
 	}
 
 	public int getBaseHp() {
@@ -107,24 +129,39 @@ public abstract class Entity {
 		this.cullable = cullable;
 	}
 
-	public Point2D localToGlobal(int x, int y) {
-		return localToGlobal(new Point2D.Double(x, y));
+	public boolean isVisible() {
+		if (parent != null) {
+			return parent.isVisible();
+		}
+
+		return getCoordinates().getCollision().intersects(runtime.getSafeArea());
 	}
 
-	public Point2D localToGlobal(Point2D point) {
-		double[] pos = getPosition();
+	public Point2D.Float toLocal(int x, int y) {
+		return toLocal(new Point2D.Float(x, y));
+	}
+
+	public Point2D.Float toLocal(Point2D.Float point) {
+		float[] pos = getPosition();
 
 		AffineTransform at = AffineTransform.getTranslateInstance(pos[0], pos[1]);
-		at.rotate(getAngle(), getWidth() / 2d, getHeight() / 2d);
+		at.rotate(getAngle(), getWidth() / 2f, getHeight() / 2f);
 
-		return at.transform(point, point);
+		return (Point2D.Float) at.transform(point, point);
 	}
 
 	public Set<Entity> getChildren() {
 		return children;
 	}
 
+	public void calculateCoords() {
+		getCoordinates().update();
+	}
+
 	public void onDestroy() {
+	}
+
+	public final void dispose() {
 		disposed = true;
 		for (Entity child : children) {
 			child.disposed = true;
@@ -132,7 +169,7 @@ public abstract class Entity {
 	}
 
 	public boolean toBeRemoved() {
-		return disposed || hp <= 0 || !getBounds().intersect(runtime.getBounds());
+		return disposed || getHp() <= 0 || !getCoordinates().intersect(runtime.getBounds());
 	}
 
 	@Override

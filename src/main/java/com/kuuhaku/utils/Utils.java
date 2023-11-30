@@ -18,9 +18,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
-import java.util.stream.DoubleStream;
 
 public abstract class Utils {
 	public static final int ALIGN_LEFT = 0;
@@ -29,13 +27,13 @@ public abstract class Utils {
 	public static final int ALIGN_RIGHT = 2;
 	public static final int ALIGN_BOTTOM = 2;
 
-	public static final double[] SIN = new double[360];
-	public static final double[] COS = new double[360];
+	public static final float[] SIN = new float[360];
+	public static final float[] COS = new float[360];
 
 	static {
 		for (int i = 0; i < 360; i++) {
-			SIN[i] = Math.sin(Math.toRadians(i));
-			COS[i] = Math.cos(Math.toRadians(i));
+			SIN[i] = (float) Math.sin(Math.toRadians(i));
+			COS[i] = (float) Math.cos(Math.toRadians(i));
 		}
 	}
 
@@ -43,7 +41,7 @@ public abstract class Utils {
 		return val >= min && val <= max;
 	}
 
-	public static boolean between(double val, double min, double max) {
+	public static boolean between(float val, float min, float max) {
 		return val >= min && val <= max;
 	}
 
@@ -51,7 +49,7 @@ public abstract class Utils {
 		return Math.max(min, Math.min(val, max));
 	}
 
-	public static double clamp(double val, double min, double max) {
+	public static float clamp(float val, float min, float max) {
 		return Math.max(min, Math.min(val, max));
 	}
 
@@ -200,8 +198,8 @@ public abstract class Utils {
 		return str.substring(0, 1).toUpperCase() + str.substring(1).toLowerCase();
 	}
 
-	public static double vecToAng(Point2D a, Point2D b) {
-		return Math.toDegrees(Math.atan2(a.getY() - b.getY(), a.getX() - b.getX()));
+	public static float vecToAng(Point2D a, Point2D b) {
+		return (float) Math.toDegrees(Math.atan2(a.getY() - b.getY(), a.getX() - b.getX()));
 	}
 
 	public static Polygon makePoly(int... xy) {
@@ -215,64 +213,66 @@ public abstract class Utils {
 		return poly;
 	}
 
-	public static Polygon makePoly(Rectangle bounds, double... xy) {
-		AtomicInteger i = new AtomicInteger();
-		Polygon out = makePoly(DoubleStream.of(xy)
-				.mapToInt(d -> (int) ((i.getAndIncrement() % 2 == 0 ? bounds.width : bounds.height) * d))
-				.toArray());
+	public static Polygon makePoly(Rectangle bounds, float... xy) {
+		int[] coords = new int[xy.length];
+		for (int i = 0; i < xy.length; i++) {
+			if (i % 2 == 0) {
+				coords[i] = (int) (bounds.width * xy[i]) + bounds.x;
+			} else {
+				coords[i] = (int) (bounds.height * xy[i]) + bounds.y;
+			}
+		}
 
-		out.translate(bounds.x, bounds.y);
-		return out;
+		return makePoly(coords);
 	}
 
-	public static double fsin(double rad) {
+	public static float fsin(float rad) {
 		int ang = (int) (Math.toDegrees(rad) % 360);
 		if (ang < 0) ang = 360 + ang;
 
 		return SIN[ang];
 	}
 
-	public static double fcos(double rad) {
+	public static float fcos(float rad) {
 		int ang = (int) (Math.toDegrees(rad) % 360);
 		if (ang < 0) ang = 360 + ang;
 
 		return COS[ang];
 	}
 
-	public static double[] angToVec(double angle) {
-		angle -= Math.toRadians(90);
-		return new double[]{-fcos(angle), -fsin(angle)};
+	public static float[] angToVec(float angle) {
+		angle -= (float) Math.toRadians(90);
+		return new float[]{-fcos(angle), -fsin(angle)};
 	}
 
 	public static RandomGenerator rng() {
 		return ThreadLocalRandom.current();
 	}
 
-	public static double angBetween(Entity a, Entity b) {
-		Point2D center = a.getCenter();
-		Point2D target = b.getCenter();
+	public static float angBetween(Entity a, Entity b) {
+		Point2D.Float center = a.getGlobalCenter();
+		Point2D.Float target = b.getGlobalCenter();
 
-		double dx = target.getX() - center.getX();
-		double dy = target.getY() - center.getY();
-		double deg = (Math.toDegrees(Math.atan2(dy, dx)) + 270) % 360;
+		float dx = target.x - center.x;
+		float dy = target.y - center.y;
 
-		return deg;
+		return (float) (Math.toDegrees(Math.atan2(dy, dx)) + 270) % 360;
 	}
 
-	public static int direction(double value) {
+	public static int direction(float value) {
 		if (value < 0) return -1;
 		else if (value > 0) return 1;
 		return 0;
 	}
 
-	public static double bezier(double t) {
-		double abs = Math.abs(t);
-		return abs * abs * (3.0 - 2.0 * abs) * direction(t);
+	public static float bezier(float t) {
+		float abs = Math.abs(t);
+		return abs * abs * (3.0f - 2.0f * abs) * direction(t);
 	}
 
-	public static double round(double value, int precision) {
+	public static float round(float value, int precision) {
 		return BigDecimal.valueOf(value)
 				.setScale(precision, RoundingMode.HALF_EVEN)
-				.doubleValue();
+				.floatValue();
 	}
 }

@@ -5,8 +5,8 @@ import com.kuuhaku.entities.Player;
 import com.kuuhaku.entities.base.Boss;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
-import com.kuuhaku.entities.enemies.Invader;
 import com.kuuhaku.entities.decoration.Wind;
+import com.kuuhaku.entities.enemies.Invader;
 import com.kuuhaku.enums.SoundType;
 import com.kuuhaku.interfaces.*;
 import com.kuuhaku.manager.AssetManager;
@@ -19,7 +19,6 @@ import javax.sound.sampled.FloatControl;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.geom.AffineTransform;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.*;
@@ -27,7 +26,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GameRuntime extends KeyAdapter implements IMenu {
-	private final double UPS = 200;
+	private final float UPS = 200;
 	public final boolean DEBUG = false;
 
 	private final Set<Enemy> enemies = new HashSet<>();
@@ -43,15 +42,16 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	private final Interp barFill = new Interp(this, 0, 1000, 250, 0);
 	private final Interp warnTrans = new Interp(this, 0, 150, 100, 3);
 
-	private int round = 1;
-	private int score = 0;
-	private int difficulty = 0;
+	private int score;
 	private int entCount, partCount;
 	private boolean paused, gameover, closed;
 	private long tick, lastSimu, lastSpawn, lastCull;
 	private Button back;
 	private Clip theme, bossTheme;
 	private Boss boss;
+
+	private Color background = Color.BLACK;
+	private Color foreground = Color.WHITE;
 
 	private static int highscore;
 
@@ -81,7 +81,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		renderer.addKeyListener(this);
 		spawn(players);
 
-		double simrate = 1000d / UPS;
+		float simrate = 1000f / UPS;
 		Thread simulation = new Thread(() -> {
 			while (!closed) {
 				process();
@@ -137,6 +137,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		renderer.render(this::render);
 	}
 
+	public Renderer getRenderer() {
+		return renderer;
+	}
+
 	public Rectangle getBounds() {
 		Rectangle r = new Rectangle(getSafeArea());
 		r.grow(150, 150);
@@ -157,7 +161,11 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			while (it.hasNext()) {
 				Entity entity = it.next();
 				if (entity.toBeRemoved()) {
-					entity.onDestroy();
+					if (entity.getHp() <= 0) {
+						entity.onDestroy();
+					}
+
+					entity.dispose();
 					it.remove();
 				}
 
@@ -191,10 +199,20 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			if (paused) return;
 
 			tick++;
+			long threat = score + tick / 100;
+			if (threat > 0 && threat % 1000 == 0) {
+				spawnLimit.release(3);
+			}
+
 			lock.acquire();
 			for (Entity entity : getEntities()) {
 				if (entity instanceof IDynamic d) {
 					d.update();
+					entity.calculateCoords();
+
+					if (entity instanceof Enemy e) {
+						threat -= e.getCost();
+					}
 				}
 			}
 			lock.release();
@@ -203,7 +221,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				spawn(new Wind(getPlayer1()));
 			}
 
-			if (false && entities.stream().noneMatch(e -> e instanceof Boss)) {
+			long spawnPool = threat;
+			if (entities.stream().noneMatch(e -> e instanceof Boss)) {
 				if (tick - lastSpawn > 250 + 1000 / getRound() - Math.min(100, getTick() / 5000)) {
 					if (spawnLimit.tryAcquire()) {
 						Enemy chosen = new Invader(this);
@@ -216,8 +235,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 							}
 						} else {
 							List<Enemy> pool = enemies.stream()
-									.filter(e -> e.getPoints() <= score - difficulty)
-									.filter(e -> e instanceof Boss == (round % 10 == 0))
+									.filter(e -> e.getCost() <= spawnPool)
+									.filter(e -> e instanceof Boss == (getRound() % 10 == 0))
 									.toList();
 
 							if (!pool.isEmpty()) {
@@ -232,7 +251,6 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 							}
 						}
 
-						difficulty += chosen.getPoints();
 						spawn(chosen);
 						if (chosen instanceof Boss b) {
 							Utils.transition(theme, bossTheme);
@@ -256,24 +274,26 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		try {
 			Graphics2D g2d = (Graphics2D) g.create();
 			{
-				g2d.setColor(Color.BLACK);
+				g2d.setColor(background);
 				g2d.fill(renderer.getBounds());
 
 				long curr = System.currentTimeMillis();
-				g2d.setColor(Color.WHITE);
+				back.setColor(foreground);
+				g2d.setColor(foreground);
 				g2d.setFont(renderer.getFont());
 
 				long frameTime = renderer.getFrameTime();
+				long simuTime = curr - lastSimu;
+
 				g2d.drawString("FPS: " + (frameTime == 0 ? "---" : (1000 / frameTime)), 10, 20);
-				g2d.drawString("UPS: " + (curr == lastSimu ? "---" : (1000 / (curr - lastSimu))), 10, 40);
+				g2d.drawString("UPS: " + (simuTime == 0 ? "---" : (1000 / simuTime)), 10, 40);
 				g2d.drawString("Entities: " + entCount, 10, 60);
 				g2d.drawString("Particles: " + partCount, 10, 80);
 				g2d.drawString("Audio cues: " + AssetManager.getAudioInstances(), 10, 100);
-				g2d.drawString("Difficulty: " + tick / 1000, 10, 120);
 
 				back.setDisabled(!(gameover || paused));
 
-				if (!isTraining()) {
+				if (true || !isTraining()) {
 					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
 					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 70);
 					g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 50);
@@ -306,47 +326,18 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 					g2d.drawRect(bounds.x - 1, bounds.y - 1, bounds.width + 1, bounds.height + 1);
 				}
 
-				g2d.setColor(Color.WHITE);
+				g2d.setColor(foreground);
 				g2d.drawRect(-1, -1, safe.width + 1, safe.height + 1);
 
 				g2d.setClip(safe);
 				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 30));
 
 				lock.acquire();
-				for (Entity entity : getEntities()) {
-					double[] pos = entity.getPosition();
+				for (Entity entity : Set.copyOf(getEntities())) {
+					float[] pos = entity.getPosition();
 
-					if (!entity.getBounds().intersect(safe) && !entity.isCullable()) {
-						if (entity instanceof ITrackable) {
-							if (pos[1] < safe.y) {
-								Utils.drawAlignedString(g2d, "^",
-										(int) (pos[0] + entity.getWidth() / 2),
-										20,
-										Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
-								);
-
-								if (entity instanceof Boss) {
-									Utils.drawAlignedString(g2d, "☠",
-											(int) (pos[0] + entity.getWidth() / 2),
-											50,
-											Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
-									);
-								}
-							} else if (pos[0] < safe.x) {
-								Utils.drawAlignedString(g2d, entity instanceof Boss ? "< ☠" : "<",
-										20,
-										(int) (pos[1] + entity.getHeight() / 2),
-										Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
-								);
-							} else if (pos[0] > safe.x + safe.width) {
-								Utils.drawAlignedString(g2d, entity instanceof Boss ? "☠ >" : ">",
-										safe.width - 20,
-										(int) (pos[1] + entity.getHeight() / 2),
-										Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
-								);
-							}
-						}
-					} else {
+					g2d.setColor(foreground);
+					if (entity.isVisible()) {
 						entity.setCullable(true);
 
 						if (entity instanceof IParticle p) {
@@ -356,16 +347,41 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 									(int) (pos[0] + entity.getWidth()), (int) (pos[1] + entity.getHeight())
 							);
 						} else {
-							AffineTransform tr = AffineTransform.getTranslateInstance(pos[0], pos[1]);
-							tr.rotate(entity.getAngle(), entity.getWidth() / 2d, entity.getHeight() / 2d);
-
-							g2d.drawImage(entity.getImage(), tr, null);
+							g2d.drawImage(entity.getImage(), entity.getCoordinates().getTransform(), null);
 
 							if (DEBUG) {
 								g2d.setColor(Color.RED.darker());
-								g2d.draw(entity.getBounds().getCollision());
-								g2d.setColor(Color.WHITE);
+								g2d.draw(entity.getCoordinates().getCollision());
+								g2d.setColor(foreground);
 							}
+						}
+					} else if (!entity.isCullable() && entity instanceof ITrackable) {
+						if (pos[1] < safe.y) {
+							Utils.drawAlignedString(g2d, "^",
+									(int) (pos[0] + entity.getWidth() / 2),
+									20,
+									Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
+							);
+
+							if (entity instanceof Boss) {
+								Utils.drawAlignedString(g2d, "☠",
+										(int) (pos[0] + entity.getWidth() / 2),
+										50,
+										Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
+								);
+							}
+						} else if (pos[0] < safe.x) {
+							Utils.drawAlignedString(g2d, entity instanceof Boss ? "< ☠" : "<",
+									20,
+									(int) (pos[1] + entity.getHeight() / 2),
+									Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
+							);
+						} else if (pos[0] > safe.x + safe.width) {
+							Utils.drawAlignedString(g2d, entity instanceof Boss ? "☠ >" : ">",
+									safe.width - 20,
+									(int) (pos[1] + entity.getHeight() / 2),
+									Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
+							);
 						}
 					}
 				}
@@ -373,20 +389,21 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			}
 
 			if (boss != null) {
+				g2d.setColor(foreground);
 				Rectangle bounds = getSafeArea();
 				if (bounds.width > renderer.getWindow().getBounds().width) {
 					bounds = renderer.getWindow().getBounds();
 				}
 
-				double fill = barFill.get() / 1000d;
+				float fill = barFill.get() / 1000f;
 
 				g2d.drawRect(
-						(int) (bounds.width * 0.1), bounds.height - 50,
-						(int) (bounds.width * 0.8), 30
+						(int) (bounds.width * 0.1f), bounds.height - 50,
+						(int) (bounds.width * 0.8f), 30
 				);
 				g2d.fillRect(
-						(int) (bounds.width * 0.1) + 5, bounds.height - 50 + 5,
-						(int) ((bounds.width * (boss.getHp() * 0.8 / boss.getBaseHp()) - 10) * fill), 20
+						(int) (bounds.width * 0.1f) + 5, bounds.height - 50 + 5,
+						(int) ((bounds.width * (boss.getHp() * 0.8f / boss.getBaseHp()) - 10) * fill), 20
 				);
 
 				if (!warnTrans.isStopped()) {
@@ -435,6 +452,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		return spawnLimit;
 	}
 
+	public int getScore() {
+		return score;
+	}
+
 	public void addScore(int score) {
 		if (isTraining()) return;
 
@@ -443,13 +464,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	}
 
 	public int getRound() {
-		int round = 1 + score / 1000;
-		if (round != this.round) {
-			this.round = round;
-			spawnLimit.release(3);
-		}
-
-		return this.round;
+		return (int) (1 + (score + tick / 100) / 1000);
 	}
 
 	public Player getPlayer1() {
@@ -458,6 +473,14 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public Player getRandomPlayer() {
 		return players.get(Utils.rng().nextInt(players.size()));
+	}
+
+	public Color getBackground() {
+		return background;
+	}
+
+	public Color getForeground() {
+		return foreground;
 	}
 
 	public Boss getBoss() {
@@ -472,16 +495,12 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		return tick;
 	}
 
-	public void releaseDifficulty(int difficulty) {
-		this.difficulty -= difficulty;
-	}
-
 	public int millisToTick(long millis) {
-		return (int) (millis / (1000d / UPS));
+		return (int) (millis / (1000f / UPS));
 	}
 
 	public long tickToMillis(int ticks) {
-		return (long) (ticks * (1000d / UPS));
+		return (long) (ticks * (1000f / UPS));
 	}
 
 	public boolean isTraining() {
@@ -492,11 +511,11 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		return gameover;
 	}
 
-	public double getFPS() {
+	public float getFPS() {
 		return 1000 / renderer.getFramerate();
 	}
 
-	public double getUPS() {
+	public float getUPS() {
 		return UPS;
 	}
 

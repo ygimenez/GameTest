@@ -1,45 +1,45 @@
 package com.kuuhaku.entities.enemies;
 
 import com.kuuhaku.entities.base.Enemy;
-import com.kuuhaku.entities.projectiles.EnemyBullet;
+import com.kuuhaku.entities.projectiles.EnemyProjectile;
+import com.kuuhaku.interfaces.Metadata;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Utils;
 
+@Metadata(sprite = "snake", hp = 500)
 public class Defender extends Enemy {
 	private final Mothership owner;
 	private int angle, radius;
 
 	public Defender(Mothership parent) {
-		super(parent.getRuntime(), "snake", 250, 10, 1);
+		super(parent.getRuntime(), parent, 1000);
 		this.owner = parent;
 
-		double[] pos = parent.getPosition();
-		getBounds().setPosition(
-				pos[0] + parent.getWidth() / 2d - getWidth() / 2d,
-				pos[1] + parent.getHeight() / 2d - getHeight() / 2d
+		getCoordinates().setPosition(
+				parent.getWidth() / 2f - getWidth() / 2f,
+				parent.getHeight() / 2f - getHeight() / 2f
 		);
-	}
-
-	@Override
-	public void attack() {
-		if (owner.isEnraged() && getCooldown().use() && Utils.rng().nextDouble() > 0.8) {
-			AssetManager.playCue("enemy_fire");
-			getRuntime().spawn(new EnemyBullet(this, 1, Utils.angBetween(this, getRuntime().getRandomPlayer())));
-		}
 	}
 
 	@Override
 	public void move() {
-		double[] pos = owner.getPosition();
- 		getBounds().setPosition(
-				pos[0] + owner.getWidth() / 2d - getWidth() / 2d + Utils.fsin(Math.toRadians(angle)) * radius / 2d,
-				pos[1] + owner.getHeight() / 2d - getHeight() / 2d + Utils.fcos(Math.toRadians(angle)) * radius / 2d
+		getCoordinates().setPosition(
+				getParent().getWidth() / 2f - getWidth() / 2f + Utils.fsin((float) Math.toRadians(angle)) * radius / 2f,
+				getParent().getHeight() / 2f - getHeight() / 2f + Utils.fcos((float) Math.toRadians(angle)) * radius / 2f
 		);
 
 		if (radius < 180) {
 			radius++;
-		} else {
-			angle++;
+		}
+
+		angle++;
+	}
+
+	@Override
+	public void shoot() {
+		if (owner.isEnraged() && Utils.rng().nextFloat() > 0.8f) {
+			AssetManager.playCue("enemy_fire");
+			getRuntime().spawn(new EnemyProjectile(this, 1, Utils.angBetween(this, getRuntime().getRandomPlayer())));
 		}
 	}
 }

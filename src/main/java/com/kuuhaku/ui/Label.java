@@ -11,6 +11,7 @@ public class Label implements IElement<Label, String> {
 	private final IElement<?, ?> parent;
 	private final Canvas context;
 
+	private Color color = Color.WHITE;
 	private String text = "";
 
 	public Label(Canvas context, IElement<?, ?> parent) {
@@ -32,6 +33,17 @@ public class Label implements IElement<Label, String> {
 	@Override
 	public Rectangle getBounds() {
 		return null;
+	}
+
+	@Override
+	public Color getColor() {
+		return color;
+	}
+
+	@Override
+	public Label setColor(Color color) {
+		this.color = color;
+		return this;
 	}
 
 	@Override

@@ -12,7 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class Training implements IMenu {
-	private final Set<Enemy> enemies = new TreeSet<>(Comparator.comparingInt(Enemy::getPoints));
+	private final Set<Enemy> enemies = new TreeSet<>(Comparator.comparingInt(Enemy::getCost));
 	private final Renderer renderer;
 
 	public Training(Renderer renderer) {
