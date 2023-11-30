@@ -1,9 +1,9 @@
 package com.kuuhaku.view;
 
 import com.kuuhaku.Renderer;
-import com.kuuhaku.utils.Utils;
 import com.kuuhaku.interfaces.IMenu;
-import com.kuuhaku.ui.ButtonElement;
+import com.kuuhaku.ui.Button;
+import com.kuuhaku.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,21 +14,21 @@ public class Game extends JFrame implements IMenu {
 
 	@Override
 	public void switchTo(IMenu from) {
-		ButtonElement play = new ButtonElement(renderer)
+		Button play = new Button(renderer)
 				.setSize(250, 50)
-				.setText("PLAY");
+				.setValue("PLAY");
 
-		ButtonElement train = new ButtonElement(renderer)
+		Button train = new Button(renderer)
 				.setSize(250, 50)
-				.setText("TRAINING");
+				.setValue("TRAINING");
 
-		ButtonElement settings = new ButtonElement(renderer)
+		Button settings = new Button(renderer)
 				.setSize(250, 50)
-				.setText("SETTINGS");
+				.setValue("SETTINGS");
 
-		ButtonElement close = new ButtonElement(renderer)
+		Button close = new Button(renderer)
 				.setSize(250, 50)
-				.setText("EXIT");
+				.setValue("EXIT");
 
 		play.addListener(e -> {
 			new GameRuntime(renderer, null).switchTo(this);
@@ -62,7 +62,7 @@ public class Game extends JFrame implements IMenu {
 			Utils.drawAlignedString(g2d, "SPACE BREACH", renderer.getWidth() / 2, 100, Utils.ALIGN_CENTER);
 
 			int i = 0;
-			for (ButtonElement btn : List.of(play, train, settings, close)) {
+			for (Button btn : List.of(play, train, settings, close)) {
 				btn.render(g2d, renderer.getWidth() / 2 - btn.getWidth() / 2, renderer.getHeight() / 2 - 50 + 60 * i++);
 			}
 

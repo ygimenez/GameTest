@@ -4,7 +4,7 @@ import com.kuuhaku.Renderer;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.interfaces.Managed;
-import com.kuuhaku.ui.ButtonElement;
+import com.kuuhaku.ui.Button;
 import com.kuuhaku.utils.Utils;
 
 import java.awt.*;
@@ -21,9 +21,9 @@ public class Training implements IMenu {
 
 	@Override
 	public void switchTo(IMenu from) {
-		ButtonElement back = new ButtonElement(renderer)
+		Button back = new Button(renderer)
 				.setSize(150, 50)
-				.setText("BACK");
+				.setValue("BACK");
 
 		GameRuntime gr = new GameRuntime(renderer);
 		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.enemies")) {
@@ -36,15 +36,15 @@ public class Training implements IMenu {
 			}
 		}
 
-		Map<Enemy, ButtonElement> buttons = new LinkedHashMap<>();
+		Map<Enemy, Button> buttons = new LinkedHashMap<>();
 		for (Enemy enemy : enemies) {
-			ButtonElement btn = new ButtonElement(renderer)
+			Button btn = new Button(renderer)
 					.setSize(100, 100)
 					.addListener(e -> {
-						new GameRuntime(renderer, enemy.getClass()).switchTo(this);
+						new GameRuntime(renderer, enemy.getClass()).switchTo(from);
 						back.dispose();
 
-						for (ButtonElement b : buttons.values()) {
+						for (Button b : buttons.values()) {
 							b.dispose();
 						}
 					});
@@ -56,7 +56,7 @@ public class Training implements IMenu {
 			from.switchTo(null);
 			back.dispose();
 
-			for (ButtonElement btn : buttons.values()) {
+			for (Button btn : buttons.values()) {
 				btn.dispose();
 			}
 		});
@@ -66,9 +66,9 @@ public class Training implements IMenu {
 			g2d.fill(renderer.getBounds());
 
 			int i = 0;
-			for (Map.Entry<Enemy, ButtonElement> e : buttons.entrySet()) {
+			for (Map.Entry<Enemy, Button> e : buttons.entrySet()) {
 				Enemy enemy = e.getKey();
-				ButtonElement btn = e.getValue();
+				Button btn = e.getValue();
 
 				int y = 100 + 210 * (i / 6);
 				int sections = Math.min(buttons.size() - 6 * (i / 6), 6);
@@ -77,7 +77,7 @@ public class Training implements IMenu {
 				int x = 20 + gap * (i % 6) + (gap / 2 - btn.getWidth() / 2);
 
 				e.getValue().render(g2d, x, y);
-				g2d.drawImage(enemy.getSprite(),
+				g2d.drawImage(enemy.getImage(),
 						btn.getX() + btn.getWidth() / 2 - enemy.getWidth() / 2,
 						btn.getY() + btn.getHeight() / 2 - enemy.getHeight() / 2,
 						null

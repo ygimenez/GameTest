@@ -52,6 +52,7 @@ public abstract class AssetManager {
 	}
 
 	public synchronized static BufferedImage getSprite(String name) {
+		if (name == null) return null;
 		return sprite.get(name);
 	}
 

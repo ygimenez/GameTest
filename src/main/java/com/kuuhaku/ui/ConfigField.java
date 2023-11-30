@@ -3,14 +3,13 @@ package com.kuuhaku.ui;
 import com.kuuhaku.enums.InputType;
 import com.kuuhaku.interfaces.IElement;
 import com.kuuhaku.manager.SettingsManager;
-import com.kuuhaku.utils.Utils;
 
 import java.awt.*;
 
 public class ConfigField {
 	private final String id;
-	private final IElement<?> field;
-	private final LabelElement label;
+	private final IElement<?, ?> field;
+	private final Label label;
 	private final InputType type;
 
 	private int maxLength = -1;
@@ -19,11 +18,10 @@ public class ConfigField {
 		this.id = id;
 		this.type = type;
 
-		if (type == InputType.TOGGLE) {
-			this.field = new ToggleElement(context)
-					.addListener(e -> SettingsManager.set(id, e.getActionCommand()));
-		} else {
-			this.field = new InputElement(context)
+		this.field = switch (type) {
+			case TOGGLE -> new Toggle(context).setValue(SettingsManager.get(id));
+			case PERCENT -> new Slider(context, true).setValue(Integer.parseInt(SettingsManager.get(id)));
+			default -> new Input(context)
 					.setValidator((oldVal, newVal) -> switch (type) {
 						case TEXT -> maxLength == -1 || newVal.length() <= maxLength ? newVal : oldVal;
 						case NUMERIC -> {
@@ -37,36 +35,23 @@ public class ConfigField {
 								yield oldVal;
 							}
 						}
-						case PERCENT -> {
-							if (newVal.isBlank()) {
-								yield "0";
-							}
-
-							try {
-								int val = Integer.parseInt(newVal);
-								yield String.valueOf(Utils.clamp(val, 0, 100));
-							} catch (NumberFormatException e) {
-								yield oldVal;
-							}
-						}
 						default -> throw new IllegalStateException();
-					})
-					.addListener(e -> SettingsManager.set(id, e.getActionCommand()))
-					.setText(SettingsManager.get(id));
-		}
+					}).setValue(SettingsManager.get(id));
+		};
 
-		this.label = new LabelElement(context, field);
+		this.field.addListener(e -> SettingsManager.set(id, e.getActionCommand()));
+		this.label = new Label(context, field);
 	}
 
 	public String getId() {
 		return id;
 	}
 
-	public IElement<?> getField() {
+	public IElement<?, ?> getField() {
 		return field;
 	}
 
-	public LabelElement getLabel() {
+	public Label getLabel() {
 		return label;
 	}
 

@@ -3,14 +3,18 @@ package com.kuuhaku.utils;
 import com.kuuhaku.view.GameRuntime;
 
 public class Cooldown {
-	private final GameRuntime parent;
+	private final GameRuntime runtime;
 	private int time;
 	private long lastUse, pauseOffset;
 	private boolean paused;
 
-	public Cooldown(GameRuntime parent, int time) {
-		this.parent = parent;
-		this.time = time;
+	public Cooldown(GameRuntime runtime, int time) {
+		this.runtime = runtime;
+		this.time = runtime.millisToTick(time);
+	}
+
+	public int getTime() {
+		return time;
 	}
 
 	public void setTime(int time) {
@@ -18,9 +22,9 @@ public class Cooldown {
 	}
 
 	public boolean use() {
-		if (paused || parent.isGameover()) return false;
+		if (paused || runtime.isGameover()) return false;
 
-		long tick = parent.getTick() - pauseOffset;
+		long tick = runtime.getTick() - pauseOffset;
 		if (tick - lastUse > time) {
 			lastUse = tick;
 			return true;
@@ -31,11 +35,11 @@ public class Cooldown {
 
 	public void pause() {
 		paused = true;
-		pauseOffset = parent.getTick();
+		pauseOffset = runtime.getTick();
 	}
 
 	public void resume() {
 		paused = false;
-		pauseOffset = parent.getTick() - pauseOffset;
+		pauseOffset = runtime.getTick() - pauseOffset;
 	}
 }

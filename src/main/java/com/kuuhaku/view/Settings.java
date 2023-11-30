@@ -6,9 +6,9 @@ import com.kuuhaku.enums.ScreenMode;
 import com.kuuhaku.enums.ScreenSize;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.manager.SettingsManager;
-import com.kuuhaku.ui.ButtonElement;
+import com.kuuhaku.ui.Button;
 import com.kuuhaku.ui.ConfigField;
-import com.kuuhaku.ui.ToggleElement;
+import com.kuuhaku.ui.Toggle;
 import com.kuuhaku.utils.Utils;
 
 import java.awt.*;
@@ -25,9 +25,9 @@ public class Settings implements IMenu {
 
 	@Override
 	public void switchTo(IMenu from) {
-		ButtonElement back = new ButtonElement(renderer)
+		Button back = new Button(renderer)
 				.setSize(150, 50)
-				.setText("BACK");
+				.setValue("BACK");
 
 		List<ConfigField> fields = new ArrayList<>();
 		for (String s : settings) {
@@ -43,21 +43,21 @@ public class Settings implements IMenu {
 			field.getField().setSize(200, 40);
 
 			for (String lbl : id.split("_")) {
-				field.getLabel().setText(field.getLabel().getText() + " " + Utils.capitalize(lbl));
+				field.getLabel().setValue(field.getLabel().getValue() + " " + Utils.capitalize(lbl));
 			}
 
-			if (field.getField() instanceof ToggleElement btn) {
+			if (field.getField() instanceof Toggle btn) {
 				if (id.equals("window_mode")) {
 					btn.setOptions(ScreenMode.modes())
 							.addListener(e -> renderer.updateScreenMode(ScreenMode.valueOf(e.getActionCommand().toUpperCase())))
-							.setText(SettingsManager.get(id));
+							.setValue(SettingsManager.get(id));
 				} else if (id.equals("window_size")) {
 					btn.setOptions(ScreenSize.sizes(renderer.getDevice()))
 							.addListener(e -> {
 								renderer.getWindow().setBounds(ScreenSize.valueOf("R_" + e.getActionCommand()).getBounds());
 								renderer.getWindow().setLocationRelativeTo(null);
 							})
-							.setText(SettingsManager.get(id))
+							.setValue(SettingsManager.get(id))
 							.setDisabled(!SettingsManager.get("window_mode").equalsIgnoreCase(ScreenMode.WINDOWED.name()));
 				}
 			}
@@ -81,7 +81,7 @@ public class Settings implements IMenu {
 
 			int i = 0;
 			for (ConfigField field : fields) {
-				if (field.getId().equals("window_size") && field.getField() instanceof ToggleElement btn) {
+				if (field.getId().equals("window_size") && field.getField() instanceof Toggle btn) {
 					btn.setDisabled(!SettingsManager.get("window_mode").equalsIgnoreCase(ScreenMode.WINDOWED.name()));
 				}
 

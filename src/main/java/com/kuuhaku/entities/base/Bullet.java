@@ -1,45 +1,43 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.manager.AssetManager;
-import com.kuuhaku.view.GameRuntime;
-import com.kuuhaku.entities.Ship;
+import com.kuuhaku.entities.Player;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IProjectile;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Utils;
+
+import java.awt.geom.Point2D;
 
 public abstract class Bullet extends Entity implements IDynamic, IProjectile {
-	private final Entity owner;
-	private final double[] vector;
+	private final Entity source;
 	private final int damage;
 	private double speed;
 
-	public Bullet(Entity owner, String sprite, int damage, double speed, double angle) {
-		super(sprite, 1);
-		this.owner = owner;
+	public Bullet(Entity source, String sprite, int damage, double speed, double angle) {
+		this(source, new Sprite(source.getRuntime(), sprite), damage, speed, angle);
+	}
+
+	public Bullet(Entity source, Sprite sprite, int damage, double speed, double angle) {
+		super(source.getRuntime(), null, sprite, 1);
+		this.source = source;
 		this.speed = speed;
 		this.damage = damage;
 
-		getBounds().setAngle(owner.getBounds().getAngle() + Math.toRadians(angle));
-		vector = new double[]{
-				Math.sin(getBounds().getAngle()),
-				-Math.cos(getBounds().getAngle())
-		};
-
+		getBounds().setAngle(source.getAngle() + Math.toRadians(angle));
+		int radius = Math.max(source.getWidth(), source.getHeight()) / 2;
+		Point2D center = source.getCenter();
 		getBounds().setPosition(
-				owner.getX() + owner.getWidth() / 2d - getWidth() / 2d + owner.getWidth() * vector[0],
-				owner.getY() + owner.getHeight() / 2d - getHeight() / 2d + owner.getHeight() * vector[1]
+				center.getX() - getWidth() / 2d - Utils.fsin(getAngle()) * radius,
+				center.getY() - getHeight() / 2d + Utils.fcos(getAngle()) * getHeight() / 2d + Utils.fcos(getAngle()) * radius
 		);
 	}
 
 	@Override
-	public GameRuntime getParent() {
-		return owner.getParent();
-	}
-
-	@Override
 	public void update() {
+		double[] vector = Utils.angToVec(getAngle());
 		getBounds().translate(vector[0] * speed, vector[1] * speed);
 
-		for (Entity entity : getParent().getEntities()) {
+		for (Entity entity : getRuntime().getEntities()) {
 			if (entity instanceof IProjectile) continue;
 
 			if (hit(entity)) {
@@ -53,13 +51,9 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 
 	@Override
 	public boolean hit(Entity other) {
-		if (!getBounds().intersect(getParent().getSafeArea())) return false;
+		if (!other.getBounds().intersect(getRuntime().getSafeArea())) return false;
 
-		return (other instanceof Ship == !(owner instanceof Ship)) && getBounds().intersect(other.getBounds());
-	}
-
-	protected Entity getOwner() {
-		return owner;
+		return other instanceof Player != source instanceof Player && getBounds().intersect(other.getBounds());
 	}
 
 	protected double getSpeed() {
@@ -70,7 +64,7 @@ public abstract class Bullet extends Entity implements IDynamic, IProjectile {
 		this.speed = speed;
 	}
 
-	protected int getDamage() {
-		return damage;
+	public Entity getSource() {
+		return source;
 	}
 }

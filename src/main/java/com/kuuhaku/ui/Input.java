@@ -12,40 +12,40 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.BiFunction;
 
-public class InputElement extends MouseAdapter implements IElement<InputElement>, IKeyListener {
+public class Input extends MouseAdapter implements IElement<Input, String>, IKeyListener {
 	private final Set<ActionListener> listeners = new HashSet<>();
 	private final Rectangle bounds = new Rectangle();
 	private final Canvas context;
+	private final Delta<Boolean> focused = new Delta<>(false);
+	private final Delta<Boolean> hover = new Delta<>(false);
 
 	private String text = "";
 	private BiFunction<String, String, String> validator = (a, b) -> b;
-	private Delta<Boolean> focused = new Delta<>(false);
-	private Delta<Boolean> hover = new Delta<>(false);
 	private boolean disabled, blip;
 	private int blipTime;
 
-	public InputElement(Canvas context) {
+	public Input(Canvas context) {
 		this.context = context;
 		context.addMouseListener(this);
 		context.addMouseMotionListener(this);
 	}
 
 	@Override
-	public String getText() {
+	public String getValue() {
 		return text;
 	}
 
 	@Override
-	public InputElement setText(String text) {
-		this.text = validator.apply(this.text, text);
+	public Input setValue(String value) {
+		this.text = validator.apply(this.text, value);
 		for (ActionListener listener : listeners) {
-			listener.actionPerformed(new ActionEvent(InputElement.this, 0, this.text));
+			listener.actionPerformed(new ActionEvent(Input.this, 0, this.text));
 		}
 
 		return this;
 	}
 
-	public InputElement setValidator(BiFunction<String, String, String> validator) {
+	public Input setValidator(BiFunction<String, String, String> validator) {
 		if (validator == null) {
 			this.validator = (a, b) -> b;
 			return this;
@@ -75,7 +75,7 @@ public class InputElement extends MouseAdapter implements IElement<InputElement>
 	}
 
 	@Override
-	public InputElement setDisabled(boolean disabled) {
+	public Input setDisabled(boolean disabled) {
 		this.disabled = disabled;
 		return this;
 	}
@@ -108,20 +108,16 @@ public class InputElement extends MouseAdapter implements IElement<InputElement>
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE && !text.isEmpty()) {
-			text = validator.apply(text, text.substring(0, text.length() - 1));
-			for (ActionListener listener : listeners) {
-				listener.actionPerformed(new ActionEvent(InputElement.this, e.getID(), text));
-			}
+			setValue(text.substring(0, text.length() - 1));
 		} else if (!KeyEvent.getKeyText(e.getKeyCode()).isEmpty()) {
-			text = validator.apply(text, text + e.getKeyChar());
-			for (ActionListener listener : listeners) {
-				listener.actionPerformed(new ActionEvent(InputElement.this, e.getID(), text));
-			}
+			setValue(text + e.getKeyChar());
 		}
 	}
 
 	@Override
 	public void render(Graphics2D g2d, int x, int y) {
+		setLocation(x, y);
+
 		g2d.setStroke(new BasicStroke(isFocused() ? 3 : 1));
 		g2d.setFont(context.getFont().deriveFont(isFocused() ? Font.BOLD : Font.PLAIN, 25));
 		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
@@ -146,7 +142,6 @@ public class InputElement extends MouseAdapter implements IElement<InputElement>
 			blipTime = 0;
 		}
 
-		setLocation(x, y);
 		g2d.draw(bounds);
 		Utils.drawAlignedString(g2d, text,
 				bounds.x + 10,

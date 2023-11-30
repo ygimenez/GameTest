@@ -4,10 +4,10 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Set;
 
-public interface IElement<T extends IElement<T>> {
-	String getText();
+public interface IElement<T extends IElement<T, R>, R> {
+	R getValue();
 
-	T setText(String text);
+	T setValue(R value);
 
 	Rectangle getBounds();
 

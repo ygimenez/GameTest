@@ -1,5 +1,6 @@
 package com.kuuhaku.utils;
 
+import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.enums.SoundType;
 import com.kuuhaku.view.GameRuntime;
 
@@ -9,11 +10,17 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.random.RandomGenerator;
+import java.util.stream.DoubleStream;
 
 public abstract class Utils {
 	public static final int ALIGN_LEFT = 0;
@@ -21,6 +28,16 @@ public abstract class Utils {
 	public static final int ALIGN_CENTER = 1;
 	public static final int ALIGN_RIGHT = 2;
 	public static final int ALIGN_BOTTOM = 2;
+
+	public static final double[] SIN = new double[360];
+	public static final double[] COS = new double[360];
+
+	static {
+		for (int i = 0; i < 360; i++) {
+			SIN[i] = Math.sin(Math.toRadians(i));
+			COS[i] = Math.cos(Math.toRadians(i));
+		}
+	}
 
 	public static boolean between(int val, int min, int max) {
 		return val >= min && val <= max;
@@ -34,7 +51,7 @@ public abstract class Utils {
 		return Math.max(min, Math.min(val, max));
 	}
 
-	public static float clamp(float val, float min, float max) {
+	public static double clamp(double val, double min, double max) {
 		return Math.max(min, Math.min(val, max));
 	}
 
@@ -169,7 +186,7 @@ public abstract class Utils {
 	public static void await(GameRuntime runtime, long ticks) {
 		long target = runtime.getTick() + ticks;
 		while (runtime.getTick() < target) {
-			sleep(10);
+			sleep(runtime.tickToMillis(1));
 		}
 	}
 
@@ -185,5 +202,77 @@ public abstract class Utils {
 
 	public static double vecToAng(Point2D a, Point2D b) {
 		return Math.toDegrees(Math.atan2(a.getY() - b.getY(), a.getX() - b.getX()));
+	}
+
+	public static Polygon makePoly(int... xy) {
+		if (xy.length % 2 != 0) throw new IllegalArgumentException("Supplied coordinate count must be even.");
+
+		Polygon poly = new Polygon();
+		for (int i = 0; i < xy.length; i += 2) {
+			poly.addPoint(xy[i], xy[i + 1]);
+		}
+
+		return poly;
+	}
+
+	public static Polygon makePoly(Rectangle bounds, double... xy) {
+		AtomicInteger i = new AtomicInteger();
+		Polygon out = makePoly(DoubleStream.of(xy)
+				.mapToInt(d -> (int) ((i.getAndIncrement() % 2 == 0 ? bounds.width : bounds.height) * d))
+				.toArray());
+
+		out.translate(bounds.x, bounds.y);
+		return out;
+	}
+
+	public static double fsin(double rad) {
+		int ang = (int) (Math.toDegrees(rad) % 360);
+		if (ang < 0) ang = 360 + ang;
+
+		return SIN[ang];
+	}
+
+	public static double fcos(double rad) {
+		int ang = (int) (Math.toDegrees(rad) % 360);
+		if (ang < 0) ang = 360 + ang;
+
+		return COS[ang];
+	}
+
+	public static double[] angToVec(double angle) {
+		angle -= Math.toRadians(90);
+		return new double[]{-fcos(angle), -fsin(angle)};
+	}
+
+	public static RandomGenerator rng() {
+		return ThreadLocalRandom.current();
+	}
+
+	public static double angBetween(Entity a, Entity b) {
+		Point2D center = a.getCenter();
+		Point2D target = b.getCenter();
+
+		double dx = target.getX() - center.getX();
+		double dy = target.getY() - center.getY();
+		double deg = (Math.toDegrees(Math.atan2(dy, dx)) + 270) % 360;
+
+		return deg;
+	}
+
+	public static int direction(double value) {
+		if (value < 0) return -1;
+		else if (value > 0) return 1;
+		return 0;
+	}
+
+	public static double bezier(double t) {
+		double abs = Math.abs(t);
+		return abs * abs * (3.0 - 2.0 * abs) * direction(t);
+	}
+
+	public static double round(double value, int precision) {
+		return BigDecimal.valueOf(value)
+				.setScale(precision, RoundingMode.HALF_EVEN)
+				.doubleValue();
 	}
 }

@@ -16,37 +16,37 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class ToggleElement extends MouseAdapter implements IElement<ToggleElement> {
+public class Toggle extends MouseAdapter implements IElement<Toggle, String> {
 	private final Set<ActionListener> listeners = new HashSet<>();
 	private final Rectangle bounds = new Rectangle();
 	private final Canvas context;
 	private final Deque<String> options = new ArrayDeque<>();
+	private final Delta<Boolean> hover = new Delta<>(false);
 
-	private Delta<Boolean> hover = new Delta<>(false);
 	private boolean disabled;
 
-	public ToggleElement(Canvas context) {
+	public Toggle(Canvas context) {
 		this.context = context;
 		context.addMouseListener(this);
 		context.addMouseMotionListener(this);
 	}
 
 	@Override
-	public String getText() {
+	public String getValue() {
 		return options.peek();
 	}
 
 	@Override
-	public ToggleElement setText(String text) {
+	public Toggle setValue(String value) {
 		int max = options.size();
-		for (int i = 0; i < max && !getText().equalsIgnoreCase(text); i++) {
+		for (int i = 0; i < max && !getValue().equalsIgnoreCase(value); i++) {
 			options.add(options.pop());
 		}
 
 		return this;
 	}
 
-	public ToggleElement setOptions(String... options) {
+	public Toggle setOptions(String... options) {
 		this.options.clear();
 		this.options.addAll(List.of(options));
 		return this;
@@ -68,7 +68,7 @@ public class ToggleElement extends MouseAdapter implements IElement<ToggleElemen
 	}
 
 	@Override
-	public ToggleElement setDisabled(boolean disabled) {
+	public Toggle setDisabled(boolean disabled) {
 		this.disabled = disabled;
 		return this;
 	}
@@ -84,7 +84,7 @@ public class ToggleElement extends MouseAdapter implements IElement<ToggleElemen
 			options.add(options.pop());
 			AssetManager.playCue("menu_click");
 			for (ActionListener listener : listeners) {
-				listener.actionPerformed(new ActionEvent(ToggleElement.this, e.getID(), getText()));
+				listener.actionPerformed(new ActionEvent(Toggle.this, e.getID(), getValue()));
 			}
 		}
 	}
@@ -99,13 +99,14 @@ public class ToggleElement extends MouseAdapter implements IElement<ToggleElemen
 
 	@Override
 	public void render(Graphics2D g2d, int x, int y) {
+		setLocation(x, y);
+
 		g2d.setStroke(new BasicStroke(isHovered() ? 3 : 1));
 		g2d.setFont(context.getFont().deriveFont(isHovered() ? Font.BOLD : Font.PLAIN, 25));
 		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
 
-		setLocation(x, y);
 		g2d.draw(bounds);
-		Utils.drawAlignedString(g2d, getText(),
+		Utils.drawAlignedString(g2d, getValue(),
 				bounds.x + bounds.width / 2,
 				bounds.y + bounds.height / 2,
 				Utils.ALIGN_CENTER, Utils.ALIGN_CENTER

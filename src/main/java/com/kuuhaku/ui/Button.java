@@ -10,29 +10,29 @@ import java.awt.event.*;
 import java.util.HashSet;
 import java.util.Set;
 
-public class ButtonElement extends MouseAdapter implements IElement<ButtonElement> {
+public class Button extends MouseAdapter implements IElement<Button, String> {
 	private final Set<ActionListener> listeners = new HashSet<>();
 	private final Rectangle bounds = new Rectangle();
 	private final Canvas context;
+	private final Delta<Boolean> hover = new Delta<>(false);
 
 	private String text = "";
-	private Delta<Boolean> hover = new Delta<>(false);
 	private boolean disabled;
 
-	public ButtonElement(Canvas context) {
+	public Button(Canvas context) {
 		this.context = context;
 		context.addMouseListener(this);
 		context.addMouseMotionListener(this);
 	}
 
 	@Override
-	public String getText() {
+	public String getValue() {
 		return text;
 	}
 
 	@Override
-	public ButtonElement setText(String text) {
-		this.text = text;
+	public Button setValue(String value) {
+		this.text = value;
 		return this;
 	}
 
@@ -52,7 +52,7 @@ public class ButtonElement extends MouseAdapter implements IElement<ButtonElemen
 	}
 
 	@Override
-	public ButtonElement setDisabled(boolean disabled) {
+	public Button setDisabled(boolean disabled) {
 		this.disabled = disabled;
 		return this;
 	}
@@ -67,7 +67,7 @@ public class ButtonElement extends MouseAdapter implements IElement<ButtonElemen
 		if (isHovered() && !disabled) {
 			AssetManager.playCue("menu_click");
 			for (ActionListener listener : listeners) {
-				listener.actionPerformed(new ActionEvent(ButtonElement.this, e.getID(), text));
+				listener.actionPerformed(new ActionEvent(Button.this, e.getID(), text));
 			}
 		}
 	}
@@ -82,11 +82,12 @@ public class ButtonElement extends MouseAdapter implements IElement<ButtonElemen
 
 	@Override
 	public void render(Graphics2D g2d, int x, int y) {
+		setLocation(x, y);
+
 		g2d.setStroke(new BasicStroke(isHovered() ? 3 : 1));
 		g2d.setFont(context.getFont().deriveFont(isHovered() ? Font.BOLD : Font.PLAIN, 25));
 		g2d.setColor(disabled ? Color.GRAY : Color.WHITE);
 
-		setLocation(x, y);
 		g2d.draw(bounds);
 		Utils.drawAlignedString(g2d, text,
 				bounds.x + bounds.width / 2,

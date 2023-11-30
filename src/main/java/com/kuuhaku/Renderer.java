@@ -30,7 +30,7 @@ public class Renderer extends Canvas {
 
 		framerate = 1000d / Integer.parseInt(SettingsManager.get("framerate", "60"));
 		Thread render = new Thread(() -> {
-			while (!Thread.interrupted()) {
+			while (true) {
 				if (frame != null && window.isVisible()) {
 					frame.accept((Graphics2D) getBufferStrategy().getDrawGraphics());
 					getBufferStrategy().show();

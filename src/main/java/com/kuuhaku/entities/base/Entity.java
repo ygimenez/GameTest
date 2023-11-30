@@ -1,62 +1,94 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Coordinates;
+import com.kuuhaku.utils.Utils;
 import com.kuuhaku.view.GameRuntime;
 
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Entity {
+	private final GameRuntime runtime;
 	private final int id = ThreadLocalRandom.current().nextInt();
-	private final BufferedImage sprite;
-	private final Coordinates bounds;
+	private final Sprite sprite;
 	private boolean cullable;
-	private int hp;
+	private int hp, baseHp;
+	private boolean disposed;
 
-	public Entity(String sprite, int hp) {
-		BufferedImage img = AssetManager.getSprite(sprite);
-		if (img == null) {
-			this.sprite = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-			bounds = new Coordinates();
-			return;
-		}
+	private final Entity parent;
+	private final Set<Entity> children = new HashSet<>();
 
-		this.sprite = img;
-		bounds = new Coordinates(this.sprite.getData().getBounds());
-		this.hp = hp;
+	public Entity(GameRuntime runtime) {
+		this(runtime, null, new Sprite(runtime, null), 1);
 	}
 
-	public abstract GameRuntime getParent();
+	public Entity(GameRuntime runtime, Entity parent, String sprite, int hp) {
+		this(runtime, parent, new Sprite(runtime, sprite), hp);
+	}
 
-	public BufferedImage getSprite() {
+	public Entity(GameRuntime runtime, Entity parent, Sprite sprite, int hp) {
+		this.runtime = runtime;
+		this.sprite = sprite;
+		this.hp = this.baseHp = hp;
+
+		this.parent = parent;
+		if (parent != null) {
+			parent.children.add(this);
+			getBounds().setReference(parent.getBounds());
+		}
+	}
+
+	public GameRuntime getRuntime() {
+		return runtime;
+	}
+
+	public Entity getParent() {
+		return parent;
+	}
+
+	public Sprite getSprite() {
 		return sprite;
 	}
 
+	public BufferedImage getImage() {
+		return sprite.getImage();
+	}
+
 	public Coordinates getBounds() {
-		return bounds;
+		return sprite.getBounds();
 	}
 
-	public int getX() {
-		return bounds.getX();
-	}
-
-	public int getY() {
-		return bounds.getY();
+	public double[] getPosition() {
+		return getBounds().getPosition();
 	}
 
 	public Point2D getCenter() {
-		return bounds.getCenter();
+		return getBounds().getCenter();
 	}
 
 	public int getWidth() {
-		return bounds.getWidth();
+		return getBounds().getWidth();
 	}
 
 	public int getHeight() {
-		return bounds.getHeight();
+		return getBounds().getHeight();
+	}
+
+	public double getAngle() {
+		return getBounds().getAngle();
+	}
+
+	public int getBaseHp() {
+		return baseHp;
+	}
+
+	public void setBaseHp(int baseHp) {
+		this.baseHp = Math.max(0, baseHp);
 	}
 
 	public int getHp() {
@@ -64,7 +96,7 @@ public abstract class Entity {
 	}
 
 	public void setHp(int hp) {
-		this.hp = Math.max(0, hp);
+		this.hp = Utils.clamp(hp, 0, baseHp);
 	}
 
 	public boolean isCullable() {
@@ -75,8 +107,32 @@ public abstract class Entity {
 		this.cullable = cullable;
 	}
 
-	public void destroy() {
+	public Point2D localToGlobal(int x, int y) {
+		return localToGlobal(new Point2D.Double(x, y));
+	}
 
+	public Point2D localToGlobal(Point2D point) {
+		double[] pos = getPosition();
+
+		AffineTransform at = AffineTransform.getTranslateInstance(pos[0], pos[1]);
+		at.rotate(getAngle(), getWidth() / 2d, getHeight() / 2d);
+
+		return at.transform(point, point);
+	}
+
+	public Set<Entity> getChildren() {
+		return children;
+	}
+
+	public void onDestroy() {
+		disposed = true;
+		for (Entity child : children) {
+			child.disposed = true;
+		}
+	}
+
+	public boolean toBeRemoved() {
+		return disposed || hp <= 0 || !getBounds().intersect(runtime.getBounds());
 	}
 
 	@Override

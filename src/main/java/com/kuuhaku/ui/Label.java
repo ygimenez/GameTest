@@ -7,25 +7,25 @@ import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Set;
 
-public class LabelElement implements IElement<LabelElement> {
-	private final IElement<?> parent;
+public class Label implements IElement<Label, String> {
+	private final IElement<?, ?> parent;
 	private final Canvas context;
 
 	private String text = "";
 
-	public LabelElement(Canvas context, IElement<?> parent) {
+	public Label(Canvas context, IElement<?, ?> parent) {
 		this.parent = parent;
 		this.context = context;
 	}
 
 	@Override
-	public String getText() {
+	public String getValue() {
 		return text;
 	}
 
 	@Override
-	public LabelElement setText(String text) {
-		this.text = text;
+	public Label setValue(String value) {
+		this.text = value;
 		return this;
 	}
 
@@ -45,7 +45,7 @@ public class LabelElement implements IElement<LabelElement> {
 	}
 
 	@Override
-	public LabelElement setDisabled(boolean disabled) {
+	public Label setDisabled(boolean disabled) {
 		return this;
 	}
 

@@ -1,78 +1,97 @@
 package com.kuuhaku.utils;
 
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 
 public class Coordinates {
-	private double x, y;
-	private int width, height;
-	private double angle = 0;
+	private final double[] pos;
+	private final int[] size;
+	private double angle;
+
+	private AffineTransform reference = new AffineTransform();
+	protected Shape boundaries;
 
 	public Coordinates() {
+		this.pos = new double[2];
+		this.size = new int[2];
 	}
 
 	public Coordinates(Rectangle bound) {
-		x = bound.x;
-		y = bound.y;
-		width = bound.width;
-		height = bound.height;
+		this.pos = new double[]{bound.x, bound.y};
+		this.size = new int[]{bound.width, bound.height};
+		this.boundaries = new Rectangle2D.Double(bound.x, bound.y, bound.width, bound.height);
 	}
 
-	public int getX() {
-		return (int) x;
-	}
-
-	public int getY() {
-		return (int) y;
+	public double[] getPosition() {
+		return pos;
 	}
 
 	public Point2D getCenter() {
-		return new Point2D.Double(x + width / 2d, y + height / 2d);
+		double[] pos = getPosition();
+		return new Point2D.Double(pos[0] + getWidth() / 2d, pos[1] + getHeight() / 2d);
 	}
 
 	public int getWidth() {
-		return width;
+		return size[0];
 	}
 
 	public int getHeight() {
-		return height;
+		return size[1];
+	}
+
+	public void setSize(int width, int height) {
+		size[0] = width;
+		size[1] = height;
+	}
+
+	public void setPosition(double x, double y) {
+		pos[0] = x;
+		pos[1] = y;
+		update();
+	}
+
+	public void translate(double dx, double dy) {
+		setPosition(pos[0] + dx, pos[1] + dy);
 	}
 
 	public double getAngle() {
 		return angle;
 	}
 
-	public void setPosition(double x, double y) {
-		this.x = x;
-		this.y = y;
-	}
-
-	public void translate(double dx, double dy) {
-		x += dx;
-		y += dy;
-	}
-
 	public void setAngle(double angle) {
 		this.angle = angle;
+		update();
 	}
 
 	public void rotate(double theta) {
-		angle += theta;
+		setAngle(angle + theta);
+	}
+
+	private void update() {
+		AffineTransform at = (AffineTransform) reference.clone();
+		at.rotate(angle, getWidth() / 2d, getHeight() / 2d);
+		boundaries = at.createTransformedShape(new Rectangle2D.Double(0, 0, getWidth(), getHeight()));
+	}
+
+	public Shape getCollision() {
+		return boundaries;
 	}
 
 	public boolean intersect(Coordinates other) {
-		return intersect(other.x, other.width, other.y, other.height);
+		return intersect(other.boundaries);
 	}
 
-	public boolean intersect(Rectangle other) {
-		return intersect(other.x, other.width, other.y, other.height);
+	public boolean intersect(Shape other) {
+		return boundaries.intersects(other.getBounds2D());
 	}
 
-	private boolean intersect(double x, int width, double y, int height) {
-		if (this.width == 0 || this.height == 0) return false;
-		else if (this.x > x + width || x > this.x + this.width) return false;
-		else if (this.y > y + height || y > this.y + this.height) return false;
+	public AffineTransform getReference() {
+		return reference;
+	}
 
-		return true;
+	public void setReference(Coordinates reference) {
+		this.reference = reference.getReference();
 	}
 }

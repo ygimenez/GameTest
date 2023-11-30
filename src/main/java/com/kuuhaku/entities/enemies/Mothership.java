@@ -1,121 +1,76 @@
 package com.kuuhaku.entities.enemies;
 
-import com.kuuhaku.entities.base.Enemy;
-import com.kuuhaku.entities.base.Entity;
-import com.kuuhaku.entities.pickups.HealthPickup;
-import com.kuuhaku.entities.projectiles.EnemyAccelBullet;
-import com.kuuhaku.entities.projectiles.EnemyBullet;
-import com.kuuhaku.entities.projectiles.MothershipBarrage;
+import com.kuuhaku.entities.base.Boss;
 import com.kuuhaku.entities.projectiles.MothershipLaser;
+import com.kuuhaku.entities.projectiles.TrackableBullet;
 import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.manager.AssetManager;
-import com.kuuhaku.utils.Cooldown;
 import com.kuuhaku.utils.Utils;
 import com.kuuhaku.view.GameRuntime;
 
 import java.awt.*;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 @Managed
-public class Mothership extends Enemy {
-	private final int baseHp;
-	private final Cooldown primary, attack;
-	private boolean spawned, inPlace, enraged;
+public class Mothership extends Boss {
+	private boolean spawned;
 	private int angle = 0;
+
+	private boolean once = false;
 
 	private final List<Runnable> rotation = new ArrayList<>();
 
-	public Mothership(GameRuntime parent) {
-		super(parent, "boss_2", (int) (3000 * (1 + parent.getRound() / 20) + parent.getTick() / 20), 2, 0);
-		this.baseHp = getHp();
-		this.primary = new Cooldown(parent, 2500 / getFireRate());
-		this.attack = new Cooldown(parent, 1000);
-
-		attack.pause();
+	public Mothership(GameRuntime runtime) {
+		super(runtime, "boss_2", (int) (3000 * (1 + runtime.getRound() / 20) + runtime.getTick() / 20), 2, 0);
+		getCooldown().pause();
 	}
 
 	@Override
 	public void move() {
-		Rectangle safe = getParent().getSafeArea();
+		double[] pos = getPosition();
+		Rectangle safe = getRuntime().getSafeArea();
 
-		if (getY() < safe.height / 20) {
+		if (pos[1] < safe.height / 20d) {
 			getBounds().translate(0, 0.1);
 		} else if (!spawned) {
 			CompletableFuture.runAsync(() -> {
-				for (int i = 0; i < 10; i++) {
-					getParent().spawn(new Defender(this));
-					Utils.await(getParent(), 36);
+				for (int i = 0; i < 1; i++) {
+					getRuntime().spawn(new Defender(this));
+					Utils.await(getRuntime(), 36);
 				}
 
-				inPlace = true;
+				getCooldown().resume();
 			});
 
 			spawned = true;
 		}
 
-		getBounds().translate(
-				BigDecimal.valueOf((safe.width / 2d - getX() - getWidth() / 2d) / 1000d)
-						.setScale(2, RoundingMode.HALF_EVEN)
-						.doubleValue(),
-				0
-		);
+		getBounds().translate(Utils.round((safe.width / 2d - pos[0] - getWidth() / 2d) / 1000d, 2), 0);
 	}
 
 	@Override
 	public void attack() {
-		if (inPlace) {
-			if (enraged && primary.use()) {
-				Entity player = getParent().getPlayer();
-				AssetManager.playCue("enemy_fire");
-				getParent().spawn(new EnemyBullet(this, 1,
-						90 + Utils.vecToAng(getCenter(), player.getCenter())
+		if (getCooldown().use()) {
+			getCooldown().pause();
+
+			if (rotation.isEmpty()) {
+				rotation.addAll(List.of(
+//							this::bulletHell,
+//						this::barrage,
+						this::laserTest
 				));
+
+				Collections.shuffle(rotation);
 			}
 
-			if (attack.use()) {
-				attack.pause();
-
-				if (rotation.isEmpty()) {
-					rotation.addAll(List.of(
-							this::laserBeam,
-							this::bulletHell,
-							this::barrage,
-							this::shotgun
-					));
-
-					Collections.shuffle(rotation);
-				}
-
-				CompletableFuture.runAsync(() -> {
-					rotation.remove(0).run();
-					attack.resume();
-				});
-			}
-		}
-	}
-
-	private void laserBeam() {
-		Rectangle safe = getParent().getSafeArea();
-		for (int i = 0; i < (enraged ? 10 : 5); i++, angle++) {
-			if (getHp() == 0) return;
-
-			int hole = ThreadLocalRandom.current().nextInt(20);
-
-			AssetManager.playCue("enemy_fire");
-			for (int j = 0; j < 30; j++) {
-				if (Utils.between(j, hole - 1, hole + 1)) continue;
-
-				getParent().spawn(new MothershipLaser(this, safe.width / 30 * j, 180));
-			}
-
-			Utils.await(getParent(), 400);
+			CompletableFuture.runAsync(() -> {
+				rotation.remove(0).run();
+				getCooldown().resume();
+			});
 		}
 	}
 
@@ -126,16 +81,23 @@ public class Mothership extends Enemy {
 
 			AssetManager.playCue("enemy_fire");
 			for (int j = 0; j < 4; j++) {
-				getParent().spawn(new EnemyAccelBullet(this, 0, angle * 1.5 + 90 * j + angle * 10));
+//				getParent().spawn(new EnemyAccelBullet(this, 0, angle * 1.5 + 90 * j + angle * 10));
 			}
 
-			Utils.await(getParent(), enraged ? 15 : 25);
+			Utils.await(getRuntime(), isEnraged() ? 15 : 25);
+		}
+	}
+
+	private void laserTest() {
+		if (!once) {
+			getRuntime().spawn(new MothershipLaser(this));
+			once = true;
 		}
 	}
 
 	private void barrage() {
-		Rectangle safe = getParent().getSafeArea();
-		for (int i = 0; i < (enraged ? 15 : 10); i++, angle++) {
+		Rectangle safe = getRuntime().getSafeArea();
+		for (int i = 0; i < (isEnraged() ? 15 : 10); i++, angle++) {
 			if (getHp() == 0) return;
 
 			int bullets = safe.height / 100;
@@ -144,52 +106,25 @@ public class Mothership extends Enemy {
 
 			AssetManager.playCue("enemy_fire");
 			for (int j = 0; j < bullets; j++) {
-				getParent().spawn(new MothershipBarrage(this, left, offset + j * 30, left ? 90 : 270));
+				getRuntime().spawn(new TrackableBullet(this, 1.5, left ? 90 : 270, new Point(
+						left ? safe.x - 100 : safe.x + safe.width + 100, offset + j * 30
+				)));
+				Utils.await(getRuntime(), 10);
 			}
 
-			Utils.await(getParent(), enraged ? 120 : 200);
-		}
-	}
-
-	private void shotgun() {
-		Entity player = getParent().getPlayer();
-		for (int i = 0; i < (enraged ? 3 : 2); i++) {
-			if (getHp() == 0) return;
-
-			AssetManager.playCue("enemy_fire");
-			for (int j = 0; j < 5; j++) {
-				double step = 20d / (5 + 1);
-				getParent().spawn(new EnemyBullet(this, 1,
-						90 + Utils.vecToAng(getCenter(), player.getCenter()) + -20 / 2d + step * (j + 1)
-				));
-			}
-
-			Utils.await(getParent(), enraged ? 50 : 100);
+			Utils.await(getRuntime(), isEnraged() ? 120 : 200);
 		}
 	}
 
 	@Override
 	public void setHp(int hp) {
-		if (getY() < getParent().getSafeArea().height / 20) return;
-
+		double[] pos = getPosition();
+		if (pos[1] < getRuntime().getSafeArea().height / 20d) return;
 		super.setHp(hp);
-		if (getHp() <= 0) {
-			AssetManager.playCue("boss_explode");
-
-			CompletableFuture.runAsync(
-					() -> AssetManager.playCue("boss_win"),
-					CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS)
-			);
-		} else if (getHp() < baseHp / 2 && !enraged) {
-			attack.setTime(2000);
-
-			getParent().spawn(new HealthPickup(this));
-			getParent().spawn(new HealthPickup(this));
-			enraged = true;
-		}
 	}
 
-	public boolean isEnraged() {
-		return enraged;
+	@Override
+	protected void onEnrage() {
+		getCooldown().setTime((int) (getCooldown().getTime() / 1.5));
 	}
 }

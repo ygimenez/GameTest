@@ -1,35 +1,28 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.manager.AssetManager;
-import com.kuuhaku.view.GameRuntime;
-import com.kuuhaku.entities.Ship;
+import com.kuuhaku.entities.Player;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IProjectile;
+import com.kuuhaku.manager.AssetManager;
+import com.kuuhaku.utils.Utils;
 
 public abstract class Pickup extends Entity implements IDynamic, IProjectile {
-	private final Entity owner;
+	public Pickup(Entity source, String sprite) {
+		super(source.getRuntime(), null, sprite, 1);
 
-	public Pickup(Entity owner, String sprite) {
-		super(sprite, 1);
-		this.owner = owner;
-
+		double[] pos = source.getPosition();
 		getBounds().setPosition(
-				owner.getX() + owner.getWidth() / 2d - getWidth() / 2d,
-				owner.getY() + owner.getHeight() / 2d - getHeight() / 2d
+				pos[0] + source.getWidth() / 2d - getWidth() / 2d + Utils.rng().nextDouble(10) - 5,
+				pos[1] + source.getHeight() / 2d - getHeight() / 2d + Utils.rng().nextDouble(10) - 5
 		);
-	}
-
-	@Override
-	public GameRuntime getParent() {
-		return owner.getParent();
 	}
 
 	@Override
 	public void update() {
 		getBounds().translate(0, 0.2);
 
-		for (Entity entity : getParent().getEntities()) {
-			if (!(entity instanceof Ship s)) continue;
+		for (Entity entity : getRuntime().getEntities()) {
+			if (!(entity instanceof Player s)) continue;
 
 			if (hit(entity)) {
 				AssetManager.playCue("pickup");
@@ -42,8 +35,8 @@ public abstract class Pickup extends Entity implements IDynamic, IProjectile {
 
 	@Override
 	public boolean hit(Entity other) {
-		return other instanceof Ship && getBounds().intersect(other.getBounds());
+		return other instanceof Player && getBounds().intersect(other.getBounds());
 	}
 
-	public abstract void addBonus(Ship ship);
+	public abstract void addBonus(Player player);
 }
