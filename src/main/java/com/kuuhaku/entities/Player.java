@@ -58,13 +58,12 @@ public class Player extends Entity implements IDynamic, IDamageable {
 	}
 
 	@Override
-	public void setHp(int hp) {
-		int before = getHp();
-		if (hp >= before || grace == 0) {
-			this.hp = Utils.clamp(hp, 0, baseHp);
+	public void damage(int value) {
+		if (value > 0 || grace == 0) {
+			this.hp = Utils.clamp(hp - value, 0, baseHp);
 		}
 
-		if (hp < before && grace == 0) {
+		if (value < 0 && grace == 0) {
 			grace = runtime.millisToTick(1000);
 		}
 	}

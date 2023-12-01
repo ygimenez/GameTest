@@ -40,7 +40,7 @@ public abstract class Projectile extends Entity implements IDynamic, ICollide {
 		for (Entity entity : getRuntime().getEntities()) {
 			if (entity instanceof IDamageable d && hit(entity)) {
 				AssetManager.playCue("hit");
-				d.setHp(d.getHp() - damage);
+				d.damage(damage);
 				dispose();
 				break;
 			}

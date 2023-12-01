@@ -26,7 +26,7 @@ public class MothershipLaserSweep extends Entity implements IDynamic, ICollide {
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
 				if (entity instanceof IDamageable d && hit(entity)) {
-					d.setHp(d.getHp() - 2);
+					d.damage(2);
 					((Player) entity).removeGrace();
 					break;
 				}

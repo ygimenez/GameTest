@@ -162,10 +162,10 @@ public class Mothership extends Boss {
 	}
 
 	@Override
-	public void setHp(int hp) {
+	public void damage(int value) {
 		float[] pos = getPosition();
 		if (pos[1] < getRuntime().getSafeArea().height / 20f) return;
-		super.setHp(hp);
+		super.damage(value);
 	}
 
 	@Override

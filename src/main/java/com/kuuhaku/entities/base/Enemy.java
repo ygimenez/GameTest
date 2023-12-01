@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrackable, IDamageable {
 	private static final List<Class<Pickup>> drops = new ArrayList<>();
 	private final Cooldown cooldown;
-	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - (getCost() * 0.0002f);
+	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - Math.min(getCost() * 0.0002f, 0.2f);
 	private int hp, baseHp;
 
 	static {
@@ -67,10 +67,10 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	}
 
 	@Override
-	public void setHp(int hp) {
+	public void damage(int value) {
 		if (!isVisible()) return;
 
-		this.hp = Utils.clamp(hp, 0, baseHp);
+		this.hp = Utils.clamp(hp - value, 0, baseHp);
 		if (hp <= 0) {
 			AssetManager.playCue("explode");
 
@@ -109,8 +109,8 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 			if (entity instanceof Enemy) continue;
 			else if (entity instanceof IDamageable d && hit(entity)) {
 				int eHp = d.getHp();
-				d.setHp(d.getHp() - getHp());
-				setHp(getHp() - eHp);
+				d.damage(getHp());
+				damage(eHp);
 				break;
 			}
 		}

@@ -7,5 +7,5 @@ public interface IDamageable {
 
 	int getHp();
 
-	void setHp(int hp);
+	void damage(int value);
 }

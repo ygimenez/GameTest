@@ -15,9 +15,8 @@ public abstract class Boss extends Enemy {
 	}
 
 	@Override
-	public void setHp(int hp) {
-		super.setHp(hp);
-
+	public void damage(int value) {
+		super.damage(value);
 		if (getHp() <= 0) {
 			onDeath();
 			AssetManager.playCue("boss_explode");

@@ -31,7 +31,7 @@ public class MothershipBomb extends Entity implements IDynamic, ICollide {
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
 				if (entity instanceof IDamageable d && hit(entity)) {
-					d.setHp(d.getHp() - 100);
+					d.damage(100);
 					break;
 				}
 			}

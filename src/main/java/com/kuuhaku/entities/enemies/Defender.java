@@ -33,9 +33,10 @@ public class Defender extends Enemy {
 	}
 
 	@Override
-	public void setHp(int hp) {
+	public void damage(int value) {
 		if (radius < 180) return;
-		super.setHp(hp);
+		super.damage(value);
+		owner.damage(value / 10);
 	}
 
 	@Override

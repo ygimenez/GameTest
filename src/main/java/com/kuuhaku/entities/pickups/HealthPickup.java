@@ -15,6 +15,6 @@ public class HealthPickup extends Pickup {
 
 	@Override
 	public void addBonus(Player player) {
-		player.setHp(player.getHp() + 25);
+		player.damage(-player.getBaseHp() / 4);
 	}
 }

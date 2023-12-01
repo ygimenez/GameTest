@@ -27,7 +27,7 @@ public class MothershipLaserShot extends Entity implements IDynamic, ICollide {
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
 				if (entity instanceof IDamageable d && hit(entity)) {
-					d.setHp(d.getHp() - 75);
+					d.damage(75);
 					break;
 				}
 			}
