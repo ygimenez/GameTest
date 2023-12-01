@@ -14,10 +14,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrackable {
+public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrackable, IDamageable {
 	private static final List<Class<Pickup>> drops = new ArrayList<>();
 	private final Cooldown cooldown;
 	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - (getCost() * 0.0002f);
+	private int hp, baseHp;
 
 	static {
 		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.pickups")) {
@@ -28,6 +29,10 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	public Enemy(GameRuntime runtime, Entity parent, int cooldown) {
 		super(runtime, parent);
 		this.cooldown = new Cooldown(runtime, cooldown);
+
+		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
+		this.hp = this.baseHp = (int) (info.hp() * (runtime.getRound() / 5f));
+
 		if (runtime.getTick() > 0) {
 			getSprite().setColor(spawnDrop ? Color.ORANGE.brighter() : runtime.getForeground());
 		}
@@ -47,8 +52,23 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	}
 
 	@Override
+	public int getBaseHp() {
+		return baseHp;
+	}
+
+	@Override
+	public void setBaseHp(int hp) {
+		this.baseHp = hp;
+	}
+
+	@Override
+	public int getHp() {
+		return hp;
+	}
+
+	@Override
 	public void setHp(int hp) {
-		super.setHp(hp);
+		this.hp = Utils.clamp(hp, 0, baseHp);
 		if (hp <= 0) {
 			AssetManager.playCue("explode");
 
@@ -87,11 +107,10 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 		}
 
 		for (Entity entity : getRuntime().getEntities()) {
-			if (!(entity instanceof Player)) continue;
-
-			if (hit(entity)) {
-				int eHp = entity.getHp();
-				entity.setHp(entity.getHp() - getHp());
+			if (entity instanceof Enemy) continue;
+			else if (entity instanceof IDamageable d && hit(entity)) {
+				int eHp = d.getHp();
+				d.setHp(d.getHp() - getHp());
 				setHp(getHp() - eHp);
 				break;
 			}

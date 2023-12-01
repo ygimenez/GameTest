@@ -1,9 +1,9 @@
 package com.kuuhaku.entities.base;
 
+import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IParticle;
 import com.kuuhaku.interfaces.Metadata;
 import com.kuuhaku.utils.Coordinates;
-import com.kuuhaku.utils.Utils;
 import com.kuuhaku.view.GameRuntime;
 
 import java.awt.geom.AffineTransform;
@@ -18,7 +18,6 @@ public abstract class Entity {
 	private final GameRuntime runtime;
 	private final int id = ThreadLocalRandom.current().nextInt();
 	private final Sprite sprite;
-	private int hp, baseHp;
 	private boolean cullable;
 	private boolean disposed;
 
@@ -34,15 +33,12 @@ public abstract class Entity {
 
 		if (this instanceof IParticle) {
 			this.sprite = new Sprite(runtime, null);
-			this.hp = this.baseHp = 1;
 		} else {
 			Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
 			if (info == null) {
 				this.sprite = sprite;
-				this.hp = this.baseHp = 1;
 			} else {
 				this.sprite = new Sprite(runtime, info.sprite());
-				this.hp = this.baseHp = (int) (info.hp() * (this instanceof Enemy ? runtime.getRound() / 5f : 1));
 			}
 		}
 
@@ -79,6 +75,10 @@ public abstract class Entity {
 		return getCoordinates().getPosition();
 	}
 
+	public float[] getAnchor() {
+		return getCoordinates().getAnchor();
+	}
+
 	public Point2D.Float getCenter() {
 		return getCoordinates().getCenter();
 	}
@@ -105,22 +105,6 @@ public abstract class Entity {
 		return getCoordinates().getAngle();
 	}
 
-	public int getBaseHp() {
-		return baseHp;
-	}
-
-	public void setBaseHp(int baseHp) {
-		this.baseHp = Math.max(0, baseHp);
-	}
-
-	public int getHp() {
-		return hp;
-	}
-
-	public void setHp(int hp) {
-		this.hp = Utils.clamp(hp, 0, baseHp);
-	}
-
 	public boolean isCullable() {
 		return cullable;
 	}
@@ -143,9 +127,11 @@ public abstract class Entity {
 
 	public Point2D.Float toLocal(Point2D.Float point) {
 		float[] pos = getPosition();
+		float[] anchor = getAnchor();
 
 		AffineTransform at = AffineTransform.getTranslateInstance(pos[0], pos[1]);
-		at.rotate(getAngle(), getWidth() / 2f, getHeight() / 2f);
+		at.translate(-anchor[0], -anchor[1]);
+		at.rotate(getAngle(), anchor[0], anchor[1]);
 
 		return (Point2D.Float) at.transform(point, point);
 	}
@@ -163,13 +149,20 @@ public abstract class Entity {
 
 	public final void dispose() {
 		disposed = true;
+
+		if (parent != null) {
+			parent.getChildren().remove(this);
+		}
+
 		for (Entity child : children) {
 			child.disposed = true;
 		}
 	}
 
 	public boolean toBeRemoved() {
-		return disposed || getHp() <= 0 || !getCoordinates().intersect(runtime.getBounds());
+		return disposed
+			   || (this instanceof IDamageable d && d.getHp() <= 0)
+			   || !getCoordinates().intersect(runtime.getBounds());
 	}
 
 	@Override

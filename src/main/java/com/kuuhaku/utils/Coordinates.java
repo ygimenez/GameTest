@@ -44,8 +44,7 @@ public class Coordinates {
 	}
 
 	public Point2D.Float getCenter() {
-		float[] pos = getPosition();
-		return new Point2D.Float(pos[0] + getWidth() / 2f, pos[1] + getHeight() / 2f);
+		return new Point2D.Float(pos[0] - anchor[0] + getWidth() / 2f, pos[1] - anchor[1] + getHeight() / 2f);
 	}
 
 	public int getWidth() {
@@ -84,7 +83,7 @@ public class Coordinates {
 
 	public AffineTransform getTransform() {
 		reference.setTransform(parent);
-		reference.translate(pos[0], pos[1]);
+		reference.translate(pos[0] - anchor[0], pos[1] - anchor[1]);
 		reference.rotate(this.angle, anchor[0], anchor[1]);
 
 		return reference;

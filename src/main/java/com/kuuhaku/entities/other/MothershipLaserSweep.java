@@ -8,30 +8,26 @@ import com.kuuhaku.interfaces.ICollide;
 import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IParticle;
-import com.kuuhaku.utils.Utils;
 
-import java.awt.geom.Point2D;
+public class MothershipLaserSweep extends Entity implements IDynamic, ICollide {
+	private float angle = 450;
 
-public class MothershipBomb extends Entity implements IDynamic, ICollide {
-	public MothershipBomb(Mothership owner) {
-		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "artillery", 8, 2,
-				owner.isEnraged() ? 15 : 20, false
-		));
-
-		float rx = (50 + Utils.rng().nextFloat(75)) * (Utils.rng().nextBoolean() ? -1 : 1);
-		float ry = (50 + Utils.rng().nextFloat(75)) * (Utils.rng().nextBoolean() ? -1 : 1);
-
-		Point2D.Float player = getRuntime().getRandomPlayer().getGlobalCenter();
-		getCoordinates().setPosition(player.x + rx, player.y + ry);
+	public MothershipLaserSweep(Mothership owner) {
+		super(owner.getRuntime(), owner, new Sprite(owner.getRuntime(), "laser_sweep", 4, 1, 20, true));
+		getCoordinates().setPosition(owner.getWidth() / 2f, owner.getHeight());
+		getCoordinates().setAnchor(0.5f, 0);
 	}
 
 	@Override
 	public void update() {
-		if (getSprite().getFrame() == 15) dispose();
+		getCoordinates().setAngle((float) Math.toRadians(angle / 10));
+
+		if (--angle <= -450) dispose();
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
 				if (entity instanceof IDamageable d && hit(entity)) {
-					d.setHp(d.getHp() - 100);
+					d.setHp(d.getHp() - 2);
+					((Player) entity).removeGrace();
 					break;
 				}
 			}
@@ -42,7 +38,6 @@ public class MothershipBomb extends Entity implements IDynamic, ICollide {
 	public boolean hit(Entity other) {
 		if (other instanceof IParticle) return false;
 		else if (!isVisible()) return false;
-		else if (!Utils.between(getSprite().getFrame(), 8, 13)) return false;
 
 		return other instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}

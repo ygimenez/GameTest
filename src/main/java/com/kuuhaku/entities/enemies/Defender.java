@@ -15,17 +15,14 @@ public class Defender extends Enemy {
 		super(parent.getRuntime(), parent, 1000);
 		this.owner = parent;
 
-		getCoordinates().setPosition(
-				parent.getWidth() / 2f - getWidth() / 2f,
-				parent.getHeight() / 2f - getHeight() / 2f
-		);
+		getCoordinates().setPosition(parent.getWidth() / 2f, parent.getHeight() / 2f);
 	}
 
 	@Override
 	public void move() {
 		getCoordinates().setPosition(
-				getParent().getWidth() / 2f - getWidth() / 2f + Utils.fsin((float) Math.toRadians(angle)) * radius / 2f,
-				getParent().getHeight() / 2f - getHeight() / 2f + Utils.fcos((float) Math.toRadians(angle)) * radius / 2f
+				getParent().getWidth() / 2f + Utils.fsin((float) Math.toRadians(angle)) * radius / 2f,
+				getParent().getHeight() / 2f + Utils.fcos((float) Math.toRadians(angle)) * radius / 2f
 		);
 
 		if (radius < 180) {
@@ -36,8 +33,14 @@ public class Defender extends Enemy {
 	}
 
 	@Override
+	public void setHp(int hp) {
+		if (radius < 180) return;
+		super.setHp(hp);
+	}
+
+	@Override
 	public void shoot() {
-		if (owner.isEnraged() && Utils.rng().nextFloat() > 0.8f) {
+		if (owner.isEnraged() && Utils.rng().nextFloat() > 0.5f) {
 			AssetManager.playCue("enemy_fire");
 			getRuntime().spawn(new EnemyProjectile(this, 1, Utils.angBetween(this, getRuntime().getRandomPlayer())));
 		}

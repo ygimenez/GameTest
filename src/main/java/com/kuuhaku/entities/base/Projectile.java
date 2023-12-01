@@ -2,6 +2,7 @@ package com.kuuhaku.entities.base;
 
 import com.kuuhaku.entities.Player;
 import com.kuuhaku.interfaces.ICollide;
+import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IParticle;
 import com.kuuhaku.manager.AssetManager;
@@ -24,30 +25,31 @@ public abstract class Projectile extends Entity implements IDynamic, ICollide {
 		this.speed = speed;
 		this.damage = damage;
 
-		getCoordinates().setAngle((float) (source.getAngle() + Math.toRadians(angle)));
-		int radius = Math.max(source.getWidth(), source.getHeight()) / 2;
 		Point2D.Float center = source.getGlobalCenter();
+		getCoordinates().setAngle((float) (source.getAngle() + Math.toRadians(angle)));
 		getCoordinates().setPosition(
-				center.x - getWidth() / 2f - Utils.fsin(getAngle()) * radius,
-				center.y - getHeight() / 2f + Utils.fcos(getAngle()) * getHeight() / 2f + Utils.fcos(getAngle()) * radius
+				center.x - Utils.fsin(getAngle()) * source.getWidth(),
+				center.y + Utils.fcos(getAngle()) * getHeight() / 2f + Utils.fcos(getAngle()) * source.getHeight()
 		);
+		getCoordinates().setAnchor(0.5f, 1);
 	}
 
 	@Override
 	public void update() {
-		float[] vector = Utils.angToVec(getAngle());
-		getCoordinates().translate(vector[0] * speed, vector[1] * speed);
-
+		move();
 		for (Entity entity : getRuntime().getEntities()) {
-			if (entity instanceof Projectile) continue;
-
-			if (hit(entity)) {
+			if (entity instanceof IDamageable d && hit(entity)) {
 				AssetManager.playCue("hit");
-				entity.setHp(entity.getHp() - damage);
-				setHp(0);
+				d.setHp(d.getHp() - damage);
+				dispose();
 				break;
 			}
 		}
+	}
+
+	protected void move() {
+		float[] vector = Utils.angToVec(getAngle());
+		getCoordinates().translate(vector[0] * speed, vector[1] * speed);
 	}
 
 	@Override

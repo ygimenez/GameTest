@@ -4,6 +4,7 @@ import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.decoration.PlayerTrail;
 import com.kuuhaku.entities.decoration.Thruster;
 import com.kuuhaku.entities.projectiles.PlayerProjectile;
+import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.Metadata;
 import com.kuuhaku.manager.AssetManager;
@@ -19,10 +20,11 @@ import java.util.concurrent.TimeUnit;
 import static java.awt.event.KeyEvent.*;
 
 @Metadata(sprite = "ship", hp = 200)
-public class Player extends Entity implements IDynamic {
+public class Player extends Entity implements IDynamic, IDamageable {
 	private final float[] velocity = {0, 0};
 	private final GameRuntime runtime;
 	private final Cooldown cooldown;
+	private int hp, baseHp;
 	private float fireRate = 3;
 	private int bullets = 1;
 	private int damage = 50;
@@ -33,23 +35,33 @@ public class Player extends Entity implements IDynamic {
 		super(runtime, null);
 		this.runtime = runtime;
 		this.cooldown = new Cooldown(runtime, (int) (500 / fireRate));
+		this.hp = this.baseHp = 200;
 
-		getCoordinates().setPosition(runtime.getSafeArea().width / 2f - getWidth() / 2f, runtime.getSafeArea().height - 100);
+		getCoordinates().setPosition(runtime.getSafeArea().width / 2f, runtime.getSafeArea().height - 100);
 		runtime.spawn(new Thruster(this));
 	}
 
 	@Override
-	public int getHp() {
-//		if (runtime.isTraining()) return 1;
+	public int getBaseHp() {
+		return baseHp;
+	}
 
-		return super.getHp();
+	@Override
+	public void setBaseHp(int hp) {
+		this.baseHp = hp;
+	}
+
+	@Override
+	public int getHp() {
+		if (runtime.isTraining()) return 1;
+		return hp;
 	}
 
 	@Override
 	public void setHp(int hp) {
 		int before = getHp();
 		if (hp >= before || grace == 0) {
-			super.setHp(hp);
+			this.hp = Utils.clamp(hp, 0, baseHp);
 		}
 
 		if (hp < before && grace == 0) {

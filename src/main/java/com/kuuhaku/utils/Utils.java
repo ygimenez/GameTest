@@ -250,11 +250,19 @@ public abstract class Utils {
 	}
 
 	public static float angBetween(Entity a, Entity b) {
-		Point2D.Float center = a.getGlobalCenter();
-		Point2D.Float target = b.getGlobalCenter();
+		return angBetween(a.getGlobalCenter(), b.getGlobalCenter());
+	}
 
-		float dx = target.x - center.x;
-		float dy = target.y - center.y;
+	public static float angBetween(Point2D.Float a, Point2D.Float b) {
+		float dx = b.x - a.x;
+		float dy = b.y - a.y;
+
+		return (float) (Math.toDegrees(Math.atan2(dy, dx)) + 270) % 360;
+	}
+
+	public static float angBetween(float[] a, float[] b) {
+		float dx = b[0] - a[0];
+		float dy = b[1] - a[1];
 
 		return (float) (Math.toDegrees(Math.atan2(dy, dx)) + 270) % 360;
 	}

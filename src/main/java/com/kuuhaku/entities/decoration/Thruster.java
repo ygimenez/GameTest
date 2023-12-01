@@ -9,7 +9,8 @@ public class Thruster extends Entity implements IDynamic {
 
 	public Thruster(Entity parent) {
 		super(parent.getRuntime(), parent, new Sprite(parent.getRuntime(), "thruster", 4, 2, 20, true));
-		getCoordinates().setPosition(getParent().getWidth() / 2f - getWidth() / 2f, -getHeight());
+		getCoordinates().setPosition(getParent().getWidth() / 2f, 0);
+		getCoordinates().setAnchor(0.5f, 1);
 	}
 
 	@Override

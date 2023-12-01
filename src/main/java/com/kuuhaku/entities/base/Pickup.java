@@ -29,7 +29,7 @@ public abstract class Pickup extends Entity implements IDynamic, ICollide {
 			if (hit(entity)) {
 				AssetManager.playCue("pickup");
 				addBonus(s);
-				setHp(0);
+				dispose();
 				break;
 			}
 		}

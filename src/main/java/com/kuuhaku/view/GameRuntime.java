@@ -63,6 +63,9 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	public GameRuntime(Renderer renderer, Class<? extends Enemy> training) {
 		this.renderer = renderer;
 		this.training = training;
+		if (training != null) {
+			tick = 100000;
+		}
 
 		players.add(new Player(this));
 		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.enemies")) {
@@ -161,7 +164,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			while (it.hasNext()) {
 				Entity entity = it.next();
 				if (entity.toBeRemoved()) {
-					if (entity.getHp() <= 0) {
+					if (entity instanceof IDamageable d && d.getHp() <= 0) {
 						entity.onDestroy();
 					}
 
@@ -293,7 +296,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 				back.setDisabled(!(gameover || paused));
 
-				if (true || !isTraining()) {
+				if (!isTraining()) {
 					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
 					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 70);
 					g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 50);
@@ -382,6 +385,20 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 									(int) (pos[1] + entity.getHeight() / 2),
 									Utils.ALIGN_RIGHT, Utils.ALIGN_CENTER
 							);
+						} else if (pos[1] > safe.y + safe.height) {
+							Utils.drawAlignedString(g2d, "v",
+									(int) (pos[0] + entity.getWidth() / 2),
+									safe.height - 20,
+									Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
+							);
+
+							if (entity instanceof Boss) {
+								Utils.drawAlignedString(g2d, "☠",
+										(int) (pos[0] + entity.getWidth() / 2),
+										safe.height - 50,
+										Utils.ALIGN_CENTER, Utils.ALIGN_BOTTOM
+								);
+							}
 						}
 					}
 				}

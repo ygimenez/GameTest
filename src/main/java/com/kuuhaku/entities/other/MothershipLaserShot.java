@@ -5,30 +5,29 @@ import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.base.Sprite;
 import com.kuuhaku.entities.enemies.Mothership;
 import com.kuuhaku.interfaces.ICollide;
+import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IParticle;
 
-public class MothershipLaser extends Entity implements IDynamic, ICollide {
-	private float angle = 450;
+public class MothershipLaserShot extends Entity implements IDynamic, ICollide {
+	public MothershipLaserShot(Mothership owner) {
+		this(owner, 0, 0, 0);
+	}
 
-	public MothershipLaser(Mothership owner) {
-		super(owner.getRuntime(), owner, new Sprite(owner.getRuntime(), "laser", 4, 1, 20, true));
-		getCoordinates().setPosition(owner.getWidth() / 2f - getWidth() / 2f, owner.getHeight());
-		getCoordinates().setAnchor(0.5f, 0);
+	public MothershipLaserShot(Mothership owner, int x, int y, float angle) {
+		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "laser_shot", 13, 1, 20, false));
+
+		getCoordinates().setPosition(x, y);
+		getCoordinates().setAngle((float) Math.toRadians(angle));
 	}
 
 	@Override
 	public void update() {
-		getCoordinates().setAngle((float) Math.toRadians(angle / 10));
-
-		if (--angle <= -450) super.setHp(0);
+		if (getSprite().getFrame() == 12) dispose();
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
-				if (!(entity instanceof Player)) continue;
-
-				if (hit(entity)) {
-					entity.setHp(entity.getHp() - 2);
-					((Player) entity).removeGrace();
+				if (entity instanceof IDamageable d && hit(entity)) {
+					d.setHp(d.getHp() - 75);
 					break;
 				}
 			}
@@ -36,13 +35,10 @@ public class MothershipLaser extends Entity implements IDynamic, ICollide {
 	}
 
 	@Override
-	public void setHp(int hp) {
-	}
-
-	@Override
 	public boolean hit(Entity other) {
 		if (other instanceof IParticle) return false;
 		else if (!isVisible()) return false;
+		else if (getSprite().getFrame() != 10) return false;
 
 		return other instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}

@@ -25,7 +25,7 @@ public abstract class Boss extends Enemy {
 					() -> AssetManager.playCue("boss_win"),
 					CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS)
 			);
-		} else if (getHp() <= getBaseHp() / 2 && !enraged) {
+		} else if (!enraged && isEnraged()) {
 			onEnrage();
 			getRuntime().spawn(new HealthPickup(this));
 			getRuntime().spawn(new HealthPickup(this));
@@ -44,7 +44,7 @@ public abstract class Boss extends Enemy {
 	}
 
 	public boolean isEnraged() {
-		return enraged;
+		return getHp() <= getBaseHp() / 2;
 	}
 
 	protected void onEnrage() {
