@@ -4,9 +4,9 @@ import com.kuuhaku.view.GameRuntime;
 
 public class Interp {
 	private final GameRuntime runtime;
-	private final int from, to, duration, loops;
+	private final int duration, loops;
+	private int looped, from, to;
 	private long start;
-	private int looped;
 	private boolean stopped = true;
 
 	public Interp(GameRuntime runtime, int from, int to, int duration, int loops) {
@@ -36,6 +36,12 @@ public class Interp {
 		}
 
 		return from + Utils.clamp((int) ((tick - start) * (to - from) / duration), 0, to - from);
+	}
+
+	public void setTarget(int to) {
+		this.from = this.to;
+		this.to = to;
+		start();
 	}
 
 	public boolean isStopped() {

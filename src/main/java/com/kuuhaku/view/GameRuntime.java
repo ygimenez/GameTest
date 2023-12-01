@@ -38,11 +38,12 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	private final Renderer renderer;
 	private final Class<? extends Enemy> training;
 
-	private final Semaphore spawnLimit = new Semaphore(10);
+	private final Semaphore spawnLimit = new Semaphore(2);
 	private final Interp barFill = new Interp(this, 0, 1000, 250, 0);
 	private final Interp warnTrans = new Interp(this, 0, 150, 100, 3);
 
 	private int score;
+	private int level = 1;
 	private int entCount, partCount;
 	private boolean paused, gameover, closed;
 	private long tick, lastSimu, lastSpawn, lastCull;
@@ -50,8 +51,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	private Clip theme, bossTheme;
 	private Boss boss;
 
-	private Color background = Color.BLACK;
-	private Color foreground = Color.WHITE;
+	private final Interp bgHue = new Interp(this, 0, 0, 200, 0);
+	private final Interp bgBright = new Interp(this, 0, 0, 200, 0);
+
+	private final Color foreground = Color.WHITE;
 
 	private static int highscore;
 
@@ -202,9 +205,9 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			if (paused) return;
 
 			tick++;
-			long threat = score + tick / 100;
-			if (threat > 0 && threat % 1000 == 0) {
-				spawnLimit.release(3);
+			long threat = score + tick / 2000;
+			if (tick % 5000 == 0) {
+				spawnLimit.release();
 			}
 
 			lock.acquire();
@@ -226,7 +229,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 			long spawnPool = threat;
 			if (entities.stream().noneMatch(e -> e instanceof Boss)) {
-				if (tick - lastSpawn > 250 + 1000 / getLevel() - Math.min(100, getTick() / 5000)) {
+				if (tick - lastSpawn > Utils.rng().nextInt(500, 1000)) {
 					if (spawnLimit.tryAcquire()) {
 						Enemy chosen = new Invader(this);
 						if (isTraining()) {
@@ -238,8 +241,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 							}
 						} else {
 							List<Enemy> pool = enemies.stream()
-									.filter(e -> e.getCost() <= spawnPool)
-									.filter(e -> e instanceof Boss == (getLevel() % 10 == 0))
+									.filter(e -> e.getCost() <= spawnPool || e instanceof Boss == ((score + tick) / 25_000 >= level))
 									.toList();
 
 							if (!pool.isEmpty()) {
@@ -255,6 +257,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 						}
 
 						spawn(chosen);
+						chosen.setSpawned(true);
+
 						if (chosen instanceof Boss b) {
 							Utils.transition(theme, bossTheme);
 							boss = b;
@@ -275,9 +279,11 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public void render(Graphics2D g) {
 		try {
+			Color bg = new Color(Color.HSBtoRGB(bgHue.get() / 100f, 0.8f, bgBright.get() / 100f));
+
 			Graphics2D g2d = (Graphics2D) g.create();
 			{
-				g2d.setColor(background);
+				g2d.setColor(bg);
 				g2d.fill(renderer.getBounds());
 
 				long curr = System.currentTimeMillis();
@@ -293,13 +299,16 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				g2d.drawString("Entities: " + entCount, 10, 60);
 				g2d.drawString("Particles: " + partCount, 10, 80);
 				g2d.drawString("Audio cues: " + AssetManager.getAudioInstances(), 10, 100);
+				g2d.drawString("Tick: " + tick, 10, 120);
+				g2d.drawString("Spawn limit: " + spawnLimit.availablePermits(), 10, 140);
 
 				back.setDisabled(!(gameover || paused));
 
 				if (!isTraining()) {
 					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
-					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 70);
-					g2d.drawString("Level: " + getLevel(), 10, renderer.getHeight() - 50);
+					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 90);
+					g2d.drawString("Bombs: " + getPlayer1().getBombs(), 10, renderer.getHeight() - 70);
+					g2d.drawString("Level: " + level, 10, renderer.getHeight() - 50);
 					g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
 					g2d.drawString("Highscore: " + highscore, 10, renderer.getHeight() - 10);
 
@@ -481,7 +490,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	}
 
 	public int getLevel() {
-		return (int) (1 + (score + tick / 20) / 1000);
+		return level;
 	}
 
 	public Player getPlayer1() {
@@ -490,10 +499,6 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public Player getRandomPlayer() {
 		return players.get(Utils.rng().nextInt(players.size()));
-	}
-
-	public Color getBackground() {
-		return background;
 	}
 
 	public Color getForeground() {
@@ -505,6 +510,12 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	}
 
 	public void setBoss(Boss boss) {
+		if (this.boss != null && boss == null) {
+			level++;
+			bgHue.setTarget(Utils.rng(level).nextInt(100));
+			bgBright.setTarget(Utils.rng(level).nextInt(30));
+		}
+
 		this.boss = boss;
 	}
 

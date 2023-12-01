@@ -16,11 +16,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
 
 public abstract class Utils {
+	private static final Random ALT_RNG = new Random();
+
 	public static final int ALIGN_LEFT = 0;
 	public static final int ALIGN_TOP = 0;
 	public static final int ALIGN_CENTER = 1;
@@ -249,6 +252,11 @@ public abstract class Utils {
 		return ThreadLocalRandom.current();
 	}
 
+	public static RandomGenerator rng(long seed) {
+		ALT_RNG.setSeed(seed);
+		return ALT_RNG;
+	}
+
 	public static float angBetween(Entity a, Entity b) {
 		return angBetween(a.getGlobalCenter(), b.getGlobalCenter());
 	}
@@ -282,5 +290,12 @@ public abstract class Utils {
 		return BigDecimal.valueOf(value)
 				.setScale(precision, RoundingMode.HALF_EVEN)
 				.floatValue();
+	}
+
+	public static void moveTowards(Point2D.Float origin, Point2D.Float out, float x, float y, float fac) {
+		out.setLocation(
+				x * fac + origin.x * (1 - fac),
+				y * fac + origin.y * (1 - fac)
+		);
 	}
 }

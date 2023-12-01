@@ -7,14 +7,14 @@ import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.interfaces.Metadata;
 
 @Managed
-@Metadata(sprite = "speed")
-public class SpeedPickup extends Pickup {
-	public SpeedPickup(Entity source) {
+@Metadata(sprite = "bomb")
+public class BombPickup extends Pickup {
+	public BombPickup(Entity source) {
 		super(source);
 	}
 
 	@Override
 	public void addBonus(Player player) {
-		player.setSpeed(player.getSpeed() + 0.25f);
+		player.addBomb();
 	}
 }

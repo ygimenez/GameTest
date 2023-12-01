@@ -108,6 +108,10 @@ public class Coordinates {
 	}
 
 	public void setParent(Coordinates parent) {
-		this.parent = parent.reference;
+		if (parent == null) {
+			this.parent = new AffineTransform();
+		} else {
+			this.parent = parent.reference;
+		}
 	}
 }

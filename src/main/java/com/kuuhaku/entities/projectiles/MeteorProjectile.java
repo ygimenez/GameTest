@@ -1,7 +1,7 @@
 package com.kuuhaku.entities.projectiles;
 
-import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.base.Projectile;
+import com.kuuhaku.entities.enemies.Mothership;
 import com.kuuhaku.interfaces.ITrackable;
 import com.kuuhaku.interfaces.Metadata;
 
@@ -14,8 +14,8 @@ public class MeteorProjectile extends Projectile implements ITrackable {
 
 	private final int direction;
 
-	public MeteorProjectile(Entity source, int x, int y, int direction) {
-		super(source, 50, 0.5f, 0);
+	public MeteorProjectile(Mothership source, int x, int y, int direction) {
+		super(source, (int) (50 * source.getDamageMult()), 0.5f, 0);
 		this.direction = direction;
 
 		getCoordinates().setPosition(x, y);

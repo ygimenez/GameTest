@@ -27,7 +27,6 @@ public abstract class Boss extends Enemy {
 		} else if (!enraged && isEnraged()) {
 			onEnrage();
 			getRuntime().spawn(new HealthPickup(this));
-			getRuntime().spawn(new HealthPickup(this));
 			enraged = true;
 		}
 	}

@@ -13,13 +13,16 @@ import com.kuuhaku.utils.Utils;
 import java.awt.geom.Point2D;
 
 public class MothershipBomb extends Entity implements IDynamic, ICollide {
+	private final Mothership owner;
+
 	public MothershipBomb(Mothership owner) {
 		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "artillery", 8, 2,
 				owner.isEnraged() ? 15 : 20, false
 		));
+		this.owner = owner;
 
-		float rx = (50 + Utils.rng().nextFloat(75)) * (Utils.rng().nextBoolean() ? -1 : 1);
-		float ry = (50 + Utils.rng().nextFloat(75)) * (Utils.rng().nextBoolean() ? -1 : 1);
+		float rx = (30 + Utils.rng().nextFloat(100)) * (Utils.rng().nextBoolean() ? -1 : 1);
+		float ry = (30 + Utils.rng().nextFloat(100)) * (Utils.rng().nextBoolean() ? -1 : 1);
 
 		Point2D.Float player = getRuntime().getRandomPlayer().getGlobalCenter();
 		getCoordinates().setPosition(player.x + rx, player.y + ry);
@@ -31,7 +34,7 @@ public class MothershipBomb extends Entity implements IDynamic, ICollide {
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
 				if (entity instanceof IDamageable d && hit(entity)) {
-					d.damage(100);
+					d.damage((int) (100 * owner.getDamageMult()));
 					break;
 				}
 			}

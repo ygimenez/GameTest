@@ -22,9 +22,8 @@ import java.util.concurrent.CompletableFuture;
 @Managed
 @Metadata(sprite = "boss_2", hp = 3000)
 public class Mothership extends Boss {
-	private boolean spawned;
-
 	private final List<Runnable> rotation = new ArrayList<>();
+	private boolean spawned;
 
 	public Mothership(GameRuntime runtime) {
 		super(runtime, null, 7000);
@@ -37,7 +36,7 @@ public class Mothership extends Boss {
 		Rectangle safe = getRuntime().getSafeArea();
 
 		if (pos[1] < safe.height / 20f) {
-			getCoordinates().translate(0, 0.2f);
+			getCoordinates().translate(0, 0.15f);
 		} else if (!spawned) {
 			CompletableFuture.runAsync(() -> {
 				for (int i = 0; i < 10; i++) {
@@ -175,6 +174,6 @@ public class Mothership extends Boss {
 
 	@Override
 	protected void onEnrage() {
-		getCooldown().setTime((int) (getCooldown().getTime() / 1.5f));
+		getCooldown().setTime((int) (getCooldown().getTime() / 1.25f));
 	}
 }

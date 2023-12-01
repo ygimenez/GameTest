@@ -16,8 +16,9 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrackable, IDamageable {
 	private static final List<Class<Pickup>> drops = new ArrayList<>();
+	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - Math.min(getCost() * 0.0005f, 0.2f);
+	private final float damageMult;
 	private final Cooldown cooldown;
-	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - Math.min(getCost() * 0.0002f, 0.2f);
 	private int hp, baseHp;
 
 	static {
@@ -31,14 +32,15 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 		this.cooldown = new Cooldown(runtime, cooldown);
 
 		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
-		this.hp = this.baseHp = (int) (info.hp() * (runtime.getLevel() / 5f));
+		this.hp = this.baseHp = info.hp() * runtime.getLevel();
+		this.damageMult = 1 + 0.2f * runtime.getLevel();
 
 		if (runtime.getTick() > 0) {
 			getSprite().setColor(spawnDrop ? Color.ORANGE.brighter() : runtime.getForeground());
 		}
 
 		getCoordinates().setPosition(
-				Utils.rng().nextFloat(getRuntime().getSafeArea().width * 0.8f - getWidth()),
+				getWidth() / 2f + Utils.rng().nextFloat(getRuntime().getSafeArea().width * 0.8f - getWidth() / 2f),
 				getRuntime().getBounds().y + 50
 		);
 	}
@@ -67,14 +69,24 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	}
 
 	@Override
+	public void setHp(int hp) {
+		this.hp = hp;
+		this.baseHp = Math.max(this.hp, this.baseHp);
+	}
+
+	public float getDamageMult() {
+		return damageMult;
+	}
+
+	@Override
 	public void damage(int value) {
 		if (!isVisible()) return;
 
 		this.hp = Utils.clamp(hp - value, 0, baseHp);
 		if (hp <= 0) {
 			AssetManager.playCue("explode");
-
 			getRuntime().addScore(getCost());
+			dispose();
 
 			if (spawnDrop) {
 				Class<Pickup> drop = drops.get(ThreadLocalRandom.current().nextInt(drops.size()));
@@ -91,7 +103,9 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 
 	@Override
 	public void onDestroy() {
-		getRuntime().getSpawnLimit().release();
+		if (wasSpawned()) {
+			getRuntime().getSpawnLimit().release();
+		}
 	}
 
 	@Override
@@ -107,7 +121,8 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 
 		for (Entity entity : getRuntime().getEntities()) {
 			if (entity instanceof Enemy) continue;
-			else if (entity instanceof IDamageable d && hit(entity)) {
+
+			if (entity instanceof IDamageable d && hit(entity)) {
 				int eHp = d.getHp();
 				d.damage(getHp());
 				damage(eHp);

@@ -18,10 +18,9 @@ public abstract class Entity {
 	private final GameRuntime runtime;
 	private final int id = ThreadLocalRandom.current().nextInt();
 	private final Sprite sprite;
-	private boolean cullable;
-	private boolean disposed;
+	private boolean cullable, disposed, spawned;
 
-	private final Entity parent;
+	private Entity parent;
 	private final Set<Entity> children = new HashSet<>();
 
 	public Entity(GameRuntime runtime, Entity parent) {
@@ -55,6 +54,14 @@ public abstract class Entity {
 
 	public Entity getParent() {
 		return parent;
+	}
+
+	public void setParent(Entity parent) {
+		getCoordinates().setParent(parent == null ? null : parent.getCoordinates());
+		if (this.parent != null) {
+			this.parent.children.remove(this);
+		}
+		this.parent = parent;
 	}
 
 	public Sprite getSprite() {
@@ -163,6 +170,14 @@ public abstract class Entity {
 		return disposed
 			   || (this instanceof IDamageable d && d.getHp() <= 0)
 			   || !getCoordinates().intersect(runtime.getBounds());
+	}
+
+	public boolean wasSpawned() {
+		return spawned;
+	}
+
+	public void setSpawned(boolean spawned) {
+		this.spawned = spawned;
 	}
 
 	@Override

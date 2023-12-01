@@ -22,7 +22,7 @@ public class PlayerTrail extends Entity implements IDynamic, IParticle {
 	@Override
 	public void update() {
 		getCoordinates().translate(0, owner.getSpeed());
-		if ((opacity -= 2) == 0) {
+		if ((opacity -= 2) <= 0) {
 			dispose();
 		}
 	}
