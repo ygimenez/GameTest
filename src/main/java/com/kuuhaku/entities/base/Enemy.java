@@ -31,7 +31,7 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 		this.cooldown = new Cooldown(runtime, cooldown);
 
 		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
-		this.hp = this.baseHp = (int) (info.hp() * (runtime.getRound() / 5f));
+		this.hp = this.baseHp = (int) (info.hp() * (runtime.getLevel() / 5f));
 
 		if (runtime.getTick() > 0) {
 			getSprite().setColor(spawnDrop ? Color.ORANGE.brighter() : runtime.getForeground());
@@ -44,7 +44,7 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	}
 
 	public final int getCost() {
-		return getHp() / 2 + 50 * getRuntime().getRound();
+		return getHp() / 2 + 50 * getRuntime().getLevel();
 	}
 
 	public Cooldown getCooldown() {
@@ -68,6 +68,8 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 
 	@Override
 	public void setHp(int hp) {
+		if (!isVisible()) return;
+
 		this.hp = Utils.clamp(hp, 0, baseHp);
 		if (hp <= 0) {
 			AssetManager.playCue("explode");
@@ -94,9 +96,6 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 
 	@Override
 	public boolean hit(Entity other) {
-		if (other instanceof IParticle) return false;
-		else if (!isVisible()) return false;
-
 		return other instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}
 

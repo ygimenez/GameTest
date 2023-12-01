@@ -15,6 +15,6 @@ public class SpeedPickup extends Pickup {
 
 	@Override
 	public void addBonus(Player player) {
-		player.setSpeed(player.getSpeed() + 0.2f);
+		player.setSpeed(player.getSpeed() + 0.5f);
 	}
 }

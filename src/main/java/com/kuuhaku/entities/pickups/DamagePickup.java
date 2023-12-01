@@ -15,6 +15,6 @@ public class DamagePickup extends Pickup {
 
 	@Override
 	public void addBonus(Player player) {
-		player.setDamage(player.getDamage() + 10);
+		player.setDamage(player.getDamage() + 25);
 	}
 }

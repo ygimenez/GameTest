@@ -226,7 +226,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 			long spawnPool = threat;
 			if (entities.stream().noneMatch(e -> e instanceof Boss)) {
-				if (tick - lastSpawn > 250 + 1000 / getRound() - Math.min(100, getTick() / 5000)) {
+				if (tick - lastSpawn > 250 + 1000 / getLevel() - Math.min(100, getTick() / 5000)) {
 					if (spawnLimit.tryAcquire()) {
 						Enemy chosen = new Invader(this);
 						if (isTraining()) {
@@ -239,7 +239,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 						} else {
 							List<Enemy> pool = enemies.stream()
 									.filter(e -> e.getCost() <= spawnPool)
-									.filter(e -> e instanceof Boss == (getRound() % 10 == 0))
+									.filter(e -> e instanceof Boss == (getLevel() % 10 == 0))
 									.toList();
 
 							if (!pool.isEmpty()) {
@@ -299,7 +299,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				if (!isTraining()) {
 					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
 					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 70);
-					g2d.drawString("Round: " + getRound(), 10, renderer.getHeight() - 50);
+					g2d.drawString("Level: " + getLevel(), 10, renderer.getHeight() - 50);
 					g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
 					g2d.drawString("Highscore: " + highscore, 10, renderer.getHeight() - 10);
 
@@ -480,8 +480,8 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 		highscore = Math.max(highscore, this.score);
 	}
 
-	public int getRound() {
-		return (int) (1 + (score + tick / 100) / 1000);
+	public int getLevel() {
+		return (int) (1 + (score + tick / 20) / 1000);
 	}
 
 	public Player getPlayer1() {
