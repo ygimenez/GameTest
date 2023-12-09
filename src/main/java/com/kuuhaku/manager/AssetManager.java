@@ -1,8 +1,5 @@
 package com.kuuhaku.manager;
 
-import com.kuuhaku.enums.SoundType;
-import com.kuuhaku.utils.Utils;
-
 import javax.imageio.ImageIO;
 import javax.sound.sampled.*;
 import java.awt.image.BufferedImage;
@@ -41,7 +38,7 @@ public abstract class AssetManager {
 		URL audioFolder = AssetManager.class.getClassLoader().getResource("audio");
 		if (audioFolder != null) {
 			try (Stream<Path> visitor = Files.walk(Path.of(audioFolder.toURI()))) {
-				visitor.filter(p -> p.getFileName().toString().endsWith(".mp3"))
+				visitor.filter(p -> p.getFileName().toString().endsWith(".wav"))
 						.forEach(p -> {
 							audio.put(p.getFileName().toString().split("\\.")[0], p.toFile());
 						});
@@ -56,41 +53,59 @@ public abstract class AssetManager {
 		return sprite.get(name);
 	}
 
+//	public synchronized static Clip getAudio(String name) {
+//		URL url = audio.get(name);
+//		if (url == null) return null;
+//
+//		try {
+//			AudioInputStream ais = AudioSystem.getAudioInputStream(url);
+//			Clip clip = AudioSystem.getClip(null);
+//			clip.addLineListener(e -> {
+//				if (e.getType() == LineEvent.Type.STOP) {
+//					try {
+//						clip.close();
+//						ais.close();
+//						audioInstances.decrementAndGet();
+//					} catch (IOException ex) {
+//						ex.printStackTrace();
+//					}
+//				}
+//			});
+//
+//			clip.open(ais);
+//			audioInstances.incrementAndGet();
+//
+////			FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+////			gain.setValue(Utils.toDecibels(SoundType.EFFECT, 0.3f));
+//
+//			return clip;
+//		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+//			e.printStackTrace();
+//			return null;
+//		}
+//	}
+
 	public synchronized static Clip getAudio(String name) {
 		File f = audio.get(name);
 		if (f == null) return null;
 
-		try {
-			AudioInputStream ais = AudioSystem.getAudioInputStream(f);
-			Clip clip = AudioSystem.getClip();
-			clip.addLineListener(e -> {
-				if (e.getType() == LineEvent.Type.STOP) {
-					try {
-						clip.close();
-						ais.close();
-						audioInstances.decrementAndGet();
-					} catch (IOException ex) {
-						ex.printStackTrace();
-					}
-				}
-			});
-
+		try (AudioInputStream ais = AudioSystem.getAudioInputStream(f)) {
+			Clip clip = AudioSystem.getClip(null);
 			clip.open(ais);
-			audioInstances.incrementAndGet();
-
-			FloatControl gain = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
-			gain.setValue(Utils.toDecibels(SoundType.EFFECT, 0.3f));
-
-			return clip;
+			clip.setFramePosition(0);
+			clip.start();
 		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
 			e.printStackTrace();
-			return null;
 		}
+
+		return null;
 	}
 
 	public static void playCue(String file) {
+		if (true) return;
 		Clip cue = getAudio(file);
 		if (cue != null) {
+			cue.stop();
 			cue.start();
 		}
 	}

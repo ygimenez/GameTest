@@ -89,7 +89,7 @@ public abstract class Utils {
 	public static void transition(Clip from, Clip to) {
 		CompletableFuture.runAsync(() -> {
 			fadeTo(from, 0);
-			fadeTo(to, 0.25f);
+			fadeTo(to, SoundType.MUSIC.getVolume());
 		});
 	}
 

@@ -106,12 +106,12 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			theme.loop(Clip.LOOP_CONTINUOUSLY);
 		}
 
-		bossTheme = AssetManager.getAudio("boss_theme");
-		if (bossTheme != null) {
-			FloatControl gain = (FloatControl) bossTheme.getControl(FloatControl.Type.MASTER_GAIN);
-			gain.setValue(Utils.toDecibels(0));
-			bossTheme.loop(Clip.LOOP_CONTINUOUSLY);
-		}
+//		bossTheme = AssetManager.getAudio("boss_theme");
+//		if (bossTheme != null) {
+//			FloatControl gain = (FloatControl) bossTheme.getControl(FloatControl.Type.MASTER_GAIN);
+//			gain.setValue(Utils.toDecibels(0));
+//			bossTheme.loop(Clip.LOOP_CONTINUOUSLY);
+//		}
 
 		back = new Button(renderer)
 				.setSize(200, 50)

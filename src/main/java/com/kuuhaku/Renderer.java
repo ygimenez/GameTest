@@ -7,6 +7,7 @@ import com.kuuhaku.utils.Utils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class Renderer extends Canvas {
@@ -14,7 +15,7 @@ public class Renderer extends Canvas {
 	private final GraphicsDevice device = window.getGraphicsConfiguration().getDevice();
 	private final Font font = new Font("Monospaced", Font.PLAIN, 15);
 	private final ScreenSize resolution = ScreenSize.R_800x600;
-	private Consumer<Graphics2D> frame;
+	private AtomicReference<Consumer<Graphics2D>> frame = new AtomicReference<>(null);
 	private long lastFrame, frameTime;
 	private float framerate;
 
@@ -25,14 +26,13 @@ public class Renderer extends Canvas {
 		window.setLocationRelativeTo(null);
 		window.setResizable(false);
 		window.setVisible(true);
-
 		createBufferStrategy(2);
 
 		framerate = 1000f / Integer.parseInt(SettingsManager.get("framerate", "60"));
 		Thread render = new Thread(() -> {
 			while (true) {
-				if (frame != null && window.isVisible()) {
-					frame.accept((Graphics2D) getBufferStrategy().getDrawGraphics());
+				if (frame.get() != null && window.isVisible()) {
+					frame.get().accept((Graphics2D) getBufferStrategy().getDrawGraphics());
 					getBufferStrategy().show();
 				}
 
@@ -49,7 +49,7 @@ public class Renderer extends Canvas {
 	}
 
 	public synchronized void render(Consumer<Graphics2D> act) {
-		frame = act;
+		frame.set(act);
 	}
 
 	public GraphicsDevice getDevice() {
