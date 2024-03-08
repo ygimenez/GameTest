@@ -60,11 +60,11 @@ public abstract class Projectile extends Entity implements IDynamic, ICollide {
 		return other instanceof Player != source instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}
 
-	protected float getSpeed() {
+	public float getSpeed() {
 		return speed;
 	}
 
-	protected void setSpeed(float speed) {
+	public void setSpeed(float speed) {
 		this.speed = speed;
 	}
 

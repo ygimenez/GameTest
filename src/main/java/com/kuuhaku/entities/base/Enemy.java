@@ -17,7 +17,6 @@ import java.util.concurrent.ThreadLocalRandom;
 public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrackable, IDamageable {
 	private static final List<Class<Pickup>> drops = new ArrayList<>();
 	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - Math.min(getCost() * 0.0005f, 0.2f);
-	private final float damageMult;
 	private final Cooldown cooldown;
 	private int hp, baseHp;
 
@@ -29,11 +28,10 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 
 	public Enemy(GameRuntime runtime, Entity parent, int cooldown) {
 		super(runtime, parent);
-		this.cooldown = new Cooldown(runtime, cooldown);
+		this.cooldown = new Cooldown(runtime, (int) (cooldown / (1 + 0.1f * runtime.getLevel())));
 
 		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
 		this.hp = this.baseHp = info.hp() * runtime.getLevel();
-		this.damageMult = 1 + 0.2f * runtime.getLevel();
 
 		if (runtime.getTick() > 0) {
 			getSprite().setColor(spawnDrop ? Color.ORANGE.brighter() : runtime.getForeground());
@@ -75,26 +73,28 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	}
 
 	public float getDamageMult() {
-		return damageMult;
+		return 1 + 0.3f * (getRuntime().getLevel() - 1);
+	}
+
+	public float getSpeedMult() {
+		return 1 + 0.2f * (getRuntime().getLevel() - 1);
 	}
 
 	@Override
 	public void damage(int value) {
-		if (!isVisible()) return;
+		if (!isVisible() || hp <= 0) return;
 
 		this.hp = Utils.clamp(hp - value, 0, baseHp);
 		if (hp <= 0) {
 			AssetManager.playCue("explode");
 			getRuntime().addScore(getCost());
-			dispose();
 
 			if (spawnDrop) {
 				Class<Pickup> drop = drops.get(ThreadLocalRandom.current().nextInt(drops.size()));
 
 				try {
 					getRuntime().spawn(drop.getConstructor(Entity.class).newInstance(this));
-				} catch (InstantiationException | IllegalAccessException | InvocationTargetException |
-						 NoSuchMethodException e) {
+				} catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 					e.printStackTrace();
 				}
 			}
@@ -140,5 +140,9 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 	public void shoot() {
 		AssetManager.playCue("enemy_fire");
 		getRuntime().spawn(new EnemyProjectile(this, 1, 0));
+	}
+
+	public void translate(float dx, float dy) {
+		getCoordinates().translate(dx * getSpeedMult(), dy * getSpeedMult());
 	}
 }

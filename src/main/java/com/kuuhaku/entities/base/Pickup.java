@@ -14,8 +14,8 @@ public abstract class Pickup extends Entity implements IDynamic, ICollide {
 
 		Point2D.Float pos = source.getGlobalCenter();
 		getCoordinates().setPosition(
-				pos.x + Utils.rng().nextFloat(source.getWidth() - getWidth()),
-				pos.y + Utils.rng().nextFloat(source.getHeight() - getHeight())
+				pos.x - getWidth() / 2f + Utils.rng().nextFloat(source.getWidth()),
+				pos.y - getHeight() / 2f + Utils.rng().nextFloat(source.getHeight())
 		);
 	}
 

@@ -86,6 +86,7 @@ public abstract class AssetManager {
 //	}
 
 	public synchronized static Clip getAudio(String name) {
+		if (true) return null;
 		File f = audio.get(name);
 		if (f == null) return null;
 

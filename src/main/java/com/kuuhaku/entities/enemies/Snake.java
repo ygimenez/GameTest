@@ -22,7 +22,7 @@ public class Snake extends Enemy {
 	@Override
 	public void move() {
 		if (getCoordinates().intersect(getRuntime().getSafeArea())) {
-			getCoordinates().translate(Utils.fsin((float) Math.toRadians(angle++ / 2f)), 0.3f + Utils.fcos((float) Math.toRadians(angle / 2f)) * 0.6f);
+			translate(Utils.fsin((float) Math.toRadians(angle++ / 2f)), 0.3f + Utils.fcos((float) Math.toRadians(angle / 2f)) * 0.6f);
 
 			if (!spawned && segments > 0) {
 				angle = 0;
@@ -37,7 +37,7 @@ public class Snake extends Enemy {
 				spawned = true;
 			}
 		} else {
-			getCoordinates().translate(0, 0.3f);
+			translate(0, 0.3f);
 		}
 	}
 }

@@ -241,7 +241,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 							}
 						} else {
 							List<Enemy> pool = enemies.stream()
-									.filter(e -> e.getCost() <= spawnPool || e instanceof Boss == ((score + tick) / 25_000 >= level))
+									.filter(e -> e.getCost() <= spawnPool || e instanceof Boss == ((score + tick) >= 25_000L * level))
 									.toList();
 
 							if (!pool.isEmpty()) {

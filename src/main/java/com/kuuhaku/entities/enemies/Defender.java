@@ -29,7 +29,6 @@ public class Defender extends Enemy {
 	public void move() {
 		if (owner.toBeRemoved()) {
 			damage(getHp());
-			dispose();
 			return;
 		}
 
@@ -54,13 +53,13 @@ public class Defender extends Enemy {
 
 			Utils.moveTowards(origin, center, safe.width / 2f, safe.height / 2f, fac);
 			getCoordinates().setPosition(
-					Utils.clamp(center.x + Utils.fsin((float) Math.toRadians(angle)) * radius, 0, safe.width),
-					Utils.clamp(center.y + Utils.fcos((float) Math.toRadians(angle)) * radius, 0, safe.height)
+					Utils.clamp(center.x + Utils.fsin((float) Math.toRadians(angle * getSpeedMult())) * radius, 0, safe.width),
+					Utils.clamp(center.y + Utils.fcos((float) Math.toRadians(angle * getSpeedMult())) * radius, 0, safe.height)
 			);
 		} else {
 			getCoordinates().setPosition(
-					getParent().getWidth() / 2f + Utils.fsin((float) Math.toRadians(angle)) * radius,
-					getParent().getHeight() / 2f + Utils.fcos((float) Math.toRadians(angle)) * radius
+					getParent().getWidth() / 2f + Utils.fsin((float) Math.toRadians(angle * getSpeedMult())) * radius,
+					getParent().getHeight() / 2f + Utils.fcos((float) Math.toRadians(angle * getSpeedMult())) * radius
 			);
 		}
 

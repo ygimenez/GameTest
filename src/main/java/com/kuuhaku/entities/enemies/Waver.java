@@ -19,7 +19,7 @@ public class Waver extends Enemy {
 
 	@Override
 	public void move() {
-		getCoordinates().translate(Utils.fsin((float) Math.toRadians(angle++ / 2f)), 0.3f);
+		translate(Utils.fsin((float) Math.toRadians(angle++ / 2f)), 0.3f);
 	}
 
 	@Override

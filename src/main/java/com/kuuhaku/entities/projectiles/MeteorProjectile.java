@@ -15,7 +15,7 @@ public class MeteorProjectile extends Projectile implements ITrackable {
 	private final int direction;
 
 	public MeteorProjectile(Mothership source, int x, int y, int direction) {
-		super(source, (int) (50 * source.getDamageMult()), 0.5f, 0);
+		super(source, (int) (50 * source.getDamageMult()), 0.5f * source.getSpeedMult(), 0);
 		this.direction = direction;
 
 		getCoordinates().setPosition(x, y);

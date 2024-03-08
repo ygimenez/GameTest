@@ -35,13 +35,13 @@ public class Invader extends Enemy {
 		}
 
 		if (drift != 0) {
-			getCoordinates().translate(0.3f * speedRoll * drift, 0);
+			translate(0.3f * speedRoll * drift, 0);
 
 			if (getRuntime().getTick() - lastDrift > 100) {
 				drift = 0;
 			}
 		} else {
-			getCoordinates().translate(0, 0.3f * speedRoll);
+			translate(0, 0.3f * speedRoll);
 		}
 	}
 }

@@ -7,6 +7,6 @@ import com.kuuhaku.interfaces.Metadata;
 @Metadata(sprite = "enemy_bullet")
 public class EnemyProjectile extends Projectile {
 	public EnemyProjectile(Enemy source, float speed, float angle) {
-		super(source, (int) (25 * source.getDamageMult()), speed, angle);
+		super(source, (int) (25 * source.getDamageMult()), speed * source.getSpeedMult(), angle);
 	}
 }

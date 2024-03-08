@@ -10,10 +10,10 @@ import java.awt.geom.Point2D;
 @Metadata(sprite = "blast")
 public class TorpedoBlast extends Projectile {
 	private final PlayerTorpedo source;
-	private int time = getRuntime().millisToTick(750);
+	private int time = getRuntime().millisToTick(75);
 
 	public TorpedoBlast(PlayerTorpedo source, float angle) {
-		super(source.getOwner(), 0, 0.5f, angle);
+		super(source.getOwner(), 0, source.getSpeed() * 2, angle);
 		this.source = source;
 
 		Point2D.Float center = source.getGlobalCenter();

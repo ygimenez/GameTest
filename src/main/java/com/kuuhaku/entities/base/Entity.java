@@ -166,6 +166,10 @@ public abstract class Entity {
 		}
 	}
 
+	public boolean isDisposed() {
+		return disposed;
+	}
+
 	public boolean toBeRemoved() {
 		return disposed
 			   || (this instanceof IDamageable d && d.getHp() <= 0)

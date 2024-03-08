@@ -36,7 +36,7 @@ public class Mothership extends Boss {
 		Rectangle safe = getRuntime().getSafeArea();
 
 		if (pos[1] < safe.height / 20f) {
-			getCoordinates().translate(0, 0.15f);
+			translate(0, 0.15f);
 		} else if (!spawned) {
 			CompletableFuture.runAsync(() -> {
 				for (int i = 0; i < 10; i++) {
@@ -50,7 +50,7 @@ public class Mothership extends Boss {
 			spawned = true;
 		}
 
-		getCoordinates().translate(Utils.round((safe.width / 2f - pos[0]) / 1000f, 2), 0);
+		translate(Utils.round((safe.width / 2f - pos[0]) / 1000f, 2), 0);
 	}
 
 	@Override
@@ -121,7 +121,6 @@ public class Mothership extends Boss {
 
 		Entity ref = new MeteorProjectile(this, 0, 0, 0);
 		int radius = (int) (Math.max(ref.getWidth(), ref.getHeight()) * 1.25f);
-		ref.dispose();
 
 		int last = -1;
 		for (int wave = 0; wave < 5; wave++) {
