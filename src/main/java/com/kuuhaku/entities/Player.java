@@ -26,7 +26,7 @@ public class Player extends Entity implements IDynamic, IDamageable {
 	private final Cooldown cooldown;
 	private int hp, baseHp;
 	private float fireRate = 3;
-	private int bullets = 2;
+	private int bullets = 1;
 	private int damage = 50;
 	private float speed = 1;
 	private int grace = 0;
@@ -132,8 +132,7 @@ public class Player extends Entity implements IDynamic, IDamageable {
 					float step = 30f / (bullets + 1);
 					float angle = -30f / 2 + step * (i + 1);
 
-					getRuntime().spawn(new PlayerProjectile(this, bullets > 1 ? Utils.rng().nextFloat(-step, step) : angle));
-					Utils.sleep(100);
+					getRuntime().spawn(new PlayerProjectile(this, -30f / 2 + step * (i + 1)));
 				}
 			}
 		} else if (getRuntime().keyState(VK_CONTROL) && bombs > 0) {
