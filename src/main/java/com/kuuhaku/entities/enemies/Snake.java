@@ -20,7 +20,7 @@ public class Snake extends Enemy {
 	}
 
 	@Override
-	public void move() {
+	protected void move() {
 		if (getCoordinates().intersect(getRuntime().getSafeArea())) {
 			translate(Utils.fsin((float) Math.toRadians(angle++ / 2f)), 0.3f + Utils.fcos((float) Math.toRadians(angle / 2f)) * 0.6f);
 

@@ -1,6 +1,6 @@
 package com.kuuhaku.entities.decoration;
 
-import com.kuuhaku.entities.Player;
+import com.kuuhaku.entities.base.Player;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.IParticle;

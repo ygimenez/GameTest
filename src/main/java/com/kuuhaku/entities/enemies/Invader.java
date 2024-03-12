@@ -21,7 +21,7 @@ public class Invader extends Enemy {
 	}
 
 	@Override
-	public void move() {
+	protected void move() {
 		float[] pos = getPosition();
 		Rectangle safe = getRuntime().getSafeArea();
 

@@ -1,6 +1,5 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.entities.Player;
 import com.kuuhaku.interfaces.ICollide;
 import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IDynamic;
@@ -9,6 +8,7 @@ import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Utils;
 
 import java.awt.geom.Point2D;
+import java.util.Arrays;
 
 public abstract class Projectile extends Entity implements IDynamic, ICollide {
 	private final Entity source;
@@ -60,6 +60,10 @@ public abstract class Projectile extends Entity implements IDynamic, ICollide {
 		return other instanceof Player != source instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}
 
+	public int getDamage() {
+		return damage;
+	}
+
 	public float getSpeed() {
 		return speed;
 	}
@@ -70,5 +74,19 @@ public abstract class Projectile extends Entity implements IDynamic, ICollide {
 
 	public Entity getSource() {
 		return source;
+	}
+
+	public float[] getImpactNormal(Entity other) {
+		float tan = Math.abs(Utils.ftan((float) Math.toRadians(Utils.angBetween(this, other))));
+
+		float[] out;
+		if (Math.abs(tan) < 1) {
+			out = new float[]{Math.signum(tan), 0};
+		} else {
+			out = new float[]{0, Math.signum(tan)};
+		}
+
+		System.out.println(Arrays.toString(out));
+		return out;
 	}
 }

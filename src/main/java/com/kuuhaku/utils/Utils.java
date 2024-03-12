@@ -2,17 +2,24 @@ package com.kuuhaku.utils;
 
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.enums.SoundType;
+import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.view.GameRuntime;
 
+import javax.imageio.ImageIO;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +27,7 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.random.RandomGenerator;
+import java.util.stream.Stream;
 
 public abstract class Utils {
 	private static final Random ALT_RNG = new Random();
@@ -32,11 +40,13 @@ public abstract class Utils {
 
 	public static final float[] SIN = new float[360];
 	public static final float[] COS = new float[360];
+	public static final float[] TAN = new float[360];
 
 	static {
 		for (int i = 0; i < 360; i++) {
 			SIN[i] = (float) Math.sin(Math.toRadians(i));
 			COS[i] = (float) Math.cos(Math.toRadians(i));
+			TAN[i] = (float) Math.tan(Math.toRadians(i));
 		}
 	}
 
@@ -137,36 +147,52 @@ public abstract class Utils {
 		ClassLoader classLoader = Utils.class.getClassLoader();
 
 		try {
-			for (URL resource : Collections.list(classLoader.getResources(path))) {
-				File file = new File(resource.toURI());
+			URL resources = classLoader.getResource(path);
 
-				if (file.isDirectory()) {
-					out.addAll(findClasses(packageName, file));
+			if (resources != null) {
+				URI uri = resources.toURI();
+
+				if (uri.getScheme().equals("jar")) {
+					try {
+						FileSystem fs = FileSystems.getFileSystem(uri);
+						out.addAll(findClasses(packageName, fs.getPath(path)));
+					} catch (FileSystemNotFoundException e) {
+						try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+							out.addAll(findClasses(packageName, fs.getPath(path)));
+						}
+					}
+				} else {
+					out.addAll(findClasses(packageName, Path.of(uri)));
 				}
 			}
-		} catch (Exception e) {
+		} catch (URISyntaxException | IOException e) {
 			e.printStackTrace();
 		}
 
 		return out;
 	}
 
-	private static List<Class<?>> findClasses(String packageName, File directory) throws ClassNotFoundException {
+	private static List<Class<?>> findClasses(String packageName, Path directory) {
 		List<Class<?>> out = new ArrayList<>();
+		if (Files.isDirectory(directory)) {
+			try (Stream<Path> visitor = Files.walk(directory)) {
+				visitor.filter(p -> !p.equals(directory))
+						.forEach(p -> {
+							try {
+								String filename = p.getFileName().toString();
 
-		if (!directory.exists()) {
-			return out;
-		}
-
-		File[] files = directory.listFiles();
-		if (files == null) return List.of();
-
-		for (File file : files) {
-			if (file.isDirectory()) {
-				out.addAll(findClasses(packageName + "." + file.getName(), file));
-			} else if (file.getName().endsWith(".class")) {
-				String className = file.getName().substring(0, file.getName().length() - 6);
-				out.add(Class.forName(packageName + "." + className));
+								if (Files.isDirectory(p)) {
+									out.addAll(findClasses(packageName + "." + filename, p));
+								} else if (filename.endsWith(".class")) {
+									String className = filename.substring(0, filename.length() - 6);
+									out.add(Class.forName(packageName + "." + className));
+								}
+							} catch (ClassNotFoundException e) {
+								throw new RuntimeException(e);
+							}
+						});
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
 		}
 
@@ -241,6 +267,13 @@ public abstract class Utils {
 		if (ang < 0) ang = 360 + ang;
 
 		return COS[ang];
+	}
+
+	public static float ftan(float rad) {
+		int ang = (int) (Math.toDegrees(rad) % 360);
+		if (ang < 0) ang = 360 + ang;
+
+		return TAN[ang];
 	}
 
 	public static float[] angToVec(float angle) {

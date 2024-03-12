@@ -1,6 +1,6 @@
 package com.kuuhaku.entities.other;
 
-import com.kuuhaku.entities.Player;
+import com.kuuhaku.entities.base.Player;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.base.Sprite;
 import com.kuuhaku.entities.enemies.Mothership;

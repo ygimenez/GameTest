@@ -1,10 +1,7 @@
-package com.kuuhaku.entities;
+package com.kuuhaku.entities.base;
 
-import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.decoration.PlayerTrail;
 import com.kuuhaku.entities.decoration.Thruster;
-import com.kuuhaku.entities.projectiles.PlayerProjectile;
-import com.kuuhaku.entities.projectiles.PlayerTorpedo;
 import com.kuuhaku.interfaces.IDamageable;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.Metadata;
@@ -20,22 +17,28 @@ import java.util.concurrent.TimeUnit;
 
 import static java.awt.event.KeyEvent.*;
 
-@Metadata(sprite = "ship", hp = 200)
-public class Player extends Entity implements IDynamic, IDamageable {
+public abstract class Player extends Entity implements IDynamic, IDamageable {
 	private final float[] velocity = {0, 0};
-	private final Cooldown cooldown;
+	private final Cooldown atkCooldown, spCooldown;
 	private int hp, baseHp;
-	private float fireRate = 3;
-	private int bullets = 1;
-	private int damage = 50;
-	private float speed = 1;
+	private float fireRate;
+	private int bullets;
+	private int damage;
+	private float speed;
 	private int grace = 0;
-	private int bombs = 1;
 
-	public Player(GameRuntime runtime) {
+	public Player(GameRuntime runtime, float fireRate, int bullets, int damage, float speed) {
 		super(runtime, null);
-		this.cooldown = new Cooldown(runtime, (int) (1000 / fireRate));
-		this.hp = this.baseHp = 200;
+		this.atkCooldown = new Cooldown(runtime, (int) (1000 / fireRate));
+		this.spCooldown = new Cooldown(runtime, 5000);
+
+		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
+		this.baseHp = this.hp = info.hp();
+
+		this.fireRate = fireRate;
+		this.bullets = bullets;
+		this.damage = damage;
+		this.speed = speed;
 
 		getCoordinates().setPosition(runtime.getSafeArea().width / 2f, runtime.getSafeArea().height - 100);
 		runtime.spawn(new Thruster(this));
@@ -124,23 +127,13 @@ public class Player extends Entity implements IDynamic, IDamageable {
 
 		getCoordinates().translate(velocity[0], velocity[1]);
 
-		cooldown.setTime(getRuntime().millisToTick((long) (1000 / fireRate)));
-		if (getRuntime().keyState(VK_SPACE)) {
-			if (cooldown.use()) {
-				AssetManager.playCue("ship_fire");
-				for (int i = 0; i < bullets; i++) {
-					float step = 30f / (bullets + 1);
-					float angle = -30f / 2 + step * (i + 1);
+		atkCooldown.setTime(getRuntime().millisToTick((long) (1000 / fireRate)));
+		if (getRuntime().keyState(VK_SPACE) && atkCooldown.use()) {
+			shoot();
+		}
 
-					getRuntime().spawn(new PlayerProjectile(this, -30f / 2 + step * (i + 1)));
-				}
-			}
-		} else if (getRuntime().keyState(VK_CONTROL) && bombs > 0) {
-			if (cooldown.use()) {
-				AssetManager.playCue("ship_fire");
-				getRuntime().spawn(new PlayerTorpedo(this));
-				bombs--;
-			}
+		if (getRuntime().keyState(VK_CONTROL) && spCooldown.use()) {
+			special();
 		}
 
 		getRuntime().spawn(
@@ -149,7 +142,7 @@ public class Player extends Entity implements IDynamic, IDamageable {
 		);
 	}
 
-	public void accelerate(int dx, int dy) {
+	private void accelerate(int dx, int dy) {
 		float vx = velocity[0];
 		float vy = velocity[1];
 		float friction = 0.4f;
@@ -178,6 +171,14 @@ public class Player extends Entity implements IDynamic, IDamageable {
 		}
 	}
 
+	abstract protected void shoot();
+
+	abstract protected void special();
+
+	public Cooldown getAtkCooldown() {
+		return atkCooldown;
+	}
+
 	@Override
 	public void onDestroy() {
 		AssetManager.playCue("explode");
@@ -192,11 +193,7 @@ public class Player extends Entity implements IDynamic, IDamageable {
 		this.grace = 0;
 	}
 
-	public int getBombs() {
-		return bombs;
-	}
-
-	public void addBomb() {
-		this.bombs++;
+	public Cooldown getSpecial() {
+		return spCooldown;
 	}
 }

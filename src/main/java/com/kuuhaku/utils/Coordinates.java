@@ -109,6 +109,9 @@ public class Coordinates {
 
 	public void setParent(Coordinates parent) {
 		if (parent == null) {
+			AffineTransform trans = getTransform();
+			setPosition((float) trans.getTranslateX(), (float) trans.getTranslateY());
+
 			this.parent = new AffineTransform();
 		} else {
 			this.parent = parent.reference;

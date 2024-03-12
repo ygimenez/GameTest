@@ -18,12 +18,12 @@ public class Waver extends Enemy {
 	}
 
 	@Override
-	public void move() {
+	protected void move() {
 		translate(Utils.fsin((float) Math.toRadians(angle++ / 2f)), 0.3f);
 	}
 
 	@Override
-	public void shoot() {
+	protected void shoot() {
 		AssetManager.playCue("enemy_fire");
 		getRuntime().spawn(new EnemyProjectile(this, 1, Utils.angBetween(this, getRuntime().getRandomPlayer())));
 	}

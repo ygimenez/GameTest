@@ -1,12 +1,14 @@
 package com.kuuhaku.view;
 
 import com.kuuhaku.Renderer;
-import com.kuuhaku.entities.Player;
+import com.kuuhaku.entities.base.Player;
 import com.kuuhaku.entities.base.Boss;
 import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.decoration.Wind;
 import com.kuuhaku.entities.enemies.Invader;
+import com.kuuhaku.entities.players.Carrier;
+import com.kuuhaku.entities.players.Fighter;
 import com.kuuhaku.enums.SoundType;
 import com.kuuhaku.interfaces.*;
 import com.kuuhaku.manager.AssetManager;
@@ -70,7 +72,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 			tick = 100000;
 		}
 
-		players.add(new Player(this));
+		players.add(new Carrier(this));
 		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.enemies")) {
 			try {
 				Enemy e = (Enemy) klass.getConstructor(GameRuntime.class).newInstance(this);
@@ -304,10 +306,17 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 				back.setDisabled(!(gameover || paused));
 
+				int spCharge = (int) (getPlayer1().getSpecial().getCharge() * 5);
 				if (!isTraining()) {
 					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
 					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 90);
-					g2d.drawString("Bombs: " + getPlayer1().getBombs(), 10, renderer.getHeight() - 70);
+
+					if (spCharge < 5) {
+						g2d.drawString("Special: [" + ("|".repeat(spCharge) + " ".repeat(5 - spCharge)) + "]", 10, renderer.getHeight() - 70);
+					} else {
+						g2d.drawString("Special: READY", 10, renderer.getHeight() - 70);
+					}
+
 					g2d.drawString("Level: " + level, 10, renderer.getHeight() - 50);
 					g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
 					g2d.drawString("Highscore: " + highscore, 10, renderer.getHeight() - 10);

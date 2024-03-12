@@ -1,6 +1,5 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.entities.Player;
 import com.kuuhaku.interfaces.ICollide;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.manager.AssetManager;

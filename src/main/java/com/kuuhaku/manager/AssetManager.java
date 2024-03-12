@@ -5,10 +5,12 @@ import javax.sound.sampled.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,35 +18,58 @@ import java.util.stream.Stream;
 
 public abstract class AssetManager {
 	private static final Map<String, BufferedImage> sprite = new HashMap<>();
-	private static final Map<String, File> audio = new HashMap<>();
+	private static final Map<String, Path> audio = new HashMap<>();
 	private static final AtomicInteger audioInstances = new AtomicInteger();
 
 	static {
-		URL spriteFolder = AssetManager.class.getClassLoader().getResource("sprite");
-		if (spriteFolder != null) {
-			try (Stream<Path> visitor = Files.walk(Path.of(spriteFolder.toURI()))) {
-				visitor.filter(p -> p.getFileName().toString().endsWith(".png"))
-						.forEach(p -> {
-							try {
-								sprite.put(p.getFileName().toString().split("\\.")[0], ImageIO.read(p.toFile()));
-							} catch (IOException ignore) {
-							}
-						});
-			} catch (URISyntaxException | IOException e) {
-				e.printStackTrace();
-			}
-		}
+		try {
+			URL resources = AssetManager.class.getResource("/assets");
 
-		URL audioFolder = AssetManager.class.getClassLoader().getResource("audio");
-		if (audioFolder != null) {
-			try (Stream<Path> visitor = Files.walk(Path.of(audioFolder.toURI()))) {
-				visitor.filter(p -> p.getFileName().toString().endsWith(".wav"))
-						.forEach(p -> {
-							audio.put(p.getFileName().toString().split("\\.")[0], p.toFile());
-						});
-			} catch (URISyntaxException | IOException e) {
-				e.printStackTrace();
+			if (resources != null) {
+				URI uri = resources.toURI();
+
+				if (uri.getScheme().equals("jar")) {
+					try (FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap())) {
+						loadAssets(fs.getPath("/assets"));
+					}
+				} else {
+					loadAssets(Path.of(uri));
+				}
 			}
+		} catch (URISyntaxException | IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void loadAssets(Path root) {
+		try {
+			Path sprites = root.resolve("sprite");
+			if (Files.isDirectory(sprites)) {
+				try (Stream<Path> visitor = Files.walk(sprites)) {
+					visitor.filter(p -> p.getFileName().toString().endsWith(".png"))
+							.forEach(p -> {
+								try (InputStream is = Files.newInputStream(p)) {
+									sprite.put(p.getFileName().toString().split("\\.")[0], ImageIO.read(is));
+								} catch (IOException ignore) {
+								}
+							});
+				}
+			}
+
+			Path audios = root.resolve("audio");
+			if (Files.isDirectory(audios)) {
+				try (Stream<Path> visitor = Files.walk(audios)) {
+					visitor.filter(p -> p.getFileName().toString().endsWith(".wav"))
+							.forEach(p -> {
+								try (InputStream is = Files.newInputStream(p)) {
+									audio.put(p.getFileName().toString().split("\\.")[0], p);
+								} catch (IOException ignore) {
+								}
+							});
+				}
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -87,17 +112,17 @@ public abstract class AssetManager {
 
 	public synchronized static Clip getAudio(String name) {
 		if (true) return null;
-		File f = audio.get(name);
-		if (f == null) return null;
-
-		try (AudioInputStream ais = AudioSystem.getAudioInputStream(f)) {
-			Clip clip = AudioSystem.getClip(null);
-			clip.open(ais);
-			clip.setFramePosition(0);
-			clip.start();
-		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
-			e.printStackTrace();
-		}
+//		File f = audio.get(name);
+//		if (f == null) return null;
+//
+//		try (AudioInputStream ais = AudioSystem.getAudioInputStream(f)) {
+//			Clip clip = AudioSystem.getClip(null);
+//			clip.open(ais);
+//			clip.setFramePosition(0);
+//			clip.start();
+//		} catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+//			e.printStackTrace();
+//		}
 
 		return null;
 	}

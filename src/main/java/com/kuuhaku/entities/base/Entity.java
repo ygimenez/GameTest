@@ -58,9 +58,15 @@ public abstract class Entity {
 
 	public void setParent(Entity parent) {
 		getCoordinates().setParent(parent == null ? null : parent.getCoordinates());
+
 		if (this.parent != null) {
 			this.parent.children.remove(this);
 		}
+
+		if (parent != null) {
+			parent.children.add(this);
+		}
+
 		this.parent = parent;
 	}
 
@@ -106,6 +112,10 @@ public abstract class Entity {
 
 	public int getHeight() {
 		return getCoordinates().getHeight();
+	}
+
+	public int getRadius() {
+		return Math.max(getWidth(), getHeight()) / 2;
 	}
 
 	public float getAngle() {
@@ -166,14 +176,11 @@ public abstract class Entity {
 		}
 	}
 
-	public boolean isDisposed() {
-		return disposed;
-	}
-
 	public boolean toBeRemoved() {
 		return disposed
 			   || (this instanceof IDamageable d && d.getHp() <= 0)
-			   || !getCoordinates().intersect(runtime.getBounds());
+			   || !getCoordinates().intersect(runtime.getBounds())
+			   || (getParent() != null && getParent().toBeRemoved());
 	}
 
 	public boolean wasSpawned() {

@@ -1,6 +1,6 @@
 package com.kuuhaku.entities.enemies;
 
-import com.kuuhaku.entities.Player;
+import com.kuuhaku.entities.base.Player;
 import com.kuuhaku.entities.base.Boss;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.other.MothershipBomb;
@@ -31,7 +31,7 @@ public class Mothership extends Boss {
 	}
 
 	@Override
-	public void move() {
+	protected void move() {
 		float[] pos = getPosition();
 		Rectangle safe = getRuntime().getSafeArea();
 
@@ -54,7 +54,7 @@ public class Mothership extends Boss {
 	}
 
 	@Override
-	public void shoot() {
+	protected void shoot() {
 		getCooldown().pause();
 
 		if (rotation.isEmpty()) {

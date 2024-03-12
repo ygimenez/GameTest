@@ -29,6 +29,11 @@ public class Cooldown {
 		this.offset = offset;
 	}
 
+	public float getCharge() {
+		long tick = runtime.getTick() - pauseOffset;
+		return Utils.clamp((float) (tick - lastUse) / (time + offset), 0, 1);
+	}
+
 	public boolean use() {
 		if (paused || runtime.isGameover()) return false;
 
@@ -53,5 +58,9 @@ public class Cooldown {
 
 	public void spend() {
 		lastUse = runtime.getTick() - pauseOffset;
+	}
+
+	public void reset() {
+		lastUse = 0;
 	}
 }

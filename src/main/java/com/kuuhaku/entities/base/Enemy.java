@@ -1,6 +1,5 @@
 package com.kuuhaku.entities.base;
 
-import com.kuuhaku.entities.Player;
 import com.kuuhaku.entities.projectiles.EnemyProjectile;
 import com.kuuhaku.interfaces.*;
 import com.kuuhaku.manager.AssetManager;
@@ -135,9 +134,9 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 		}
 	}
 
-	abstract public void move();
+	abstract protected void move();
 
-	public void shoot() {
+	protected void shoot() {
 		AssetManager.playCue("enemy_fire");
 		getRuntime().spawn(new EnemyProjectile(this, 1, 0));
 	}

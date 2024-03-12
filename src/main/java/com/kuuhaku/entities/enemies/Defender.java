@@ -26,7 +26,7 @@ public class Defender extends Enemy {
 	}
 
 	@Override
-	public void move() {
+	protected void move() {
 		if (owner.toBeRemoved()) {
 			damage(getHp());
 			return;
@@ -76,7 +76,7 @@ public class Defender extends Enemy {
 	}
 
 	@Override
-	public void shoot() {
+	protected void shoot() {
 		if (radius == tgtRadius && owner.isEnraged() && Utils.rng().nextFloat() > 0.75f) {
 			AssetManager.playCue("enemy_fire");
 			getRuntime().spawn(new EnemyProjectile(this, 1, Utils.angBetween(this, getRuntime().getRandomPlayer())));
