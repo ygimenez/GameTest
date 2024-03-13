@@ -2,9 +2,22 @@ package com.kuuhaku.interfaces;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 import java.util.Set;
 
 public interface IElement<T extends IElement<T, R>, R> {
+	static void dispose(IElement<?, ?>... elements) {
+		for (IElement<?, ?> e : elements) {
+			e.dispose();
+		}
+	}
+
+	static void dispose(Collection<? extends IElement<?, ?>> elements) {
+		for (IElement<?, ?> e : elements) {
+			e.dispose();
+		}
+	}
+
 	R getValue();
 
 	T setValue(R value);

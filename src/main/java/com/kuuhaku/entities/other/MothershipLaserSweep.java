@@ -16,7 +16,7 @@ public class MothershipLaserSweep extends Entity implements IDynamic, ICollide {
 	boolean reverse = Utils.rng().nextBoolean();
 
 	public MothershipLaserSweep(Mothership owner) {
-		super(owner.getRuntime(), owner, new Sprite(owner.getRuntime(), "laser_sweep", 4, 1, 20, true));
+		super(owner.getRuntime(), owner, new Sprite(owner.getRuntime(), "laser_sweep", 4, 1, 20, 0, true));
 		this.owner = owner;
 
 		getCoordinates().setPosition(owner.getWidth() / 2f, owner.getHeight());

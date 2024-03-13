@@ -7,6 +7,8 @@ import com.kuuhaku.interfaces.IParticle;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.utils.Utils;
 
+import java.awt.*;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.Arrays;
 
@@ -77,16 +79,22 @@ public abstract class Projectile extends Entity implements IDynamic, ICollide {
 	}
 
 	public float[] getImpactNormal(Entity other) {
-		float tan = Math.abs(Utils.ftan((float) Math.toRadians(Utils.angBetween(this, other))));
+		Rectangle rect = getCoordinates().getCollision().getBounds();
+		Rectangle col = other.getCoordinates().getCollision().getBounds();
 
-		float[] out;
-		if (Math.abs(tan) < 1) {
-			out = new float[]{Math.signum(tan), 0};
-		} else {
-			out = new float[]{0, Math.signum(tan)};
-		}
+		Line2D.Float line = new Line2D.Float();
+		line.setLine(col.x, col.y, col.x + col.width, col.y);
+		if (line.intersects(rect)) return new float[]{0, 1};
 
-		System.out.println(Arrays.toString(out));
-		return out;
+		line.setLine(col.x + col.width, col.y, col.x + col.width, col.y + col.height);
+		if (line.intersects(rect)) return new float[]{-1, 0};
+
+		line.setLine(col.x + col.width, col.y + col.height, col.x, col.y + col.height);
+		if (line.intersects(rect)) return new float[]{0, -1};
+
+		line.setLine(col.x, col.y + col.height, col.x, col.y);
+		if (line.intersects(rect)) return new float[]{1, 0};
+
+		return new float[2];
 	}
 }

@@ -20,7 +20,7 @@ public class Renderer extends Canvas {
 	private float framerate;
 
 	public Renderer() {
-		window.setTitle("Space Breach - v0.0.1f-ALPHA");
+		window.setTitle("Space Breach - " + Main.VERSION);
 		window.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		window.add(this);
 		window.setLocationRelativeTo(null);
@@ -28,11 +28,18 @@ public class Renderer extends Canvas {
 		window.setVisible(true);
 		createBufferStrategy(2);
 
-		framerate = 1000f / Integer.parseInt(SettingsManager.get("framerate", "60"));
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		int defFps = ge.getDefaultScreenDevice().getDisplayMode().getRefreshRate();
+
+		framerate = 1000f / Integer.parseInt(SettingsManager.get("framerate", defFps));
 		Thread render = new Thread(() -> {
 			while (true) {
 				if (frame.get() != null && window.isVisible()) {
-					frame.get().accept((Graphics2D) getBufferStrategy().getDrawGraphics());
+					Graphics2D g2d = (Graphics2D) getBufferStrategy().getDrawGraphics();
+					g2d.setColor(Color.BLACK);
+					g2d.fill(getBounds());
+
+					frame.get().accept(g2d);
 					getBufferStrategy().show();
 				}
 

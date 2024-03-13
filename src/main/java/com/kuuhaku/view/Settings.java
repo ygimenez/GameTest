@@ -4,14 +4,15 @@ import com.kuuhaku.Renderer;
 import com.kuuhaku.enums.InputType;
 import com.kuuhaku.enums.ScreenMode;
 import com.kuuhaku.enums.ScreenSize;
+import com.kuuhaku.interfaces.IElement;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.manager.SettingsManager;
 import com.kuuhaku.ui.Button;
 import com.kuuhaku.ui.ConfigField;
+import com.kuuhaku.ui.Navigator;
 import com.kuuhaku.ui.Toggle;
 import com.kuuhaku.utils.Utils;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,17 +20,19 @@ public class Settings implements IMenu {
 	private static final String[] settings = {"pmaster_volume", "peffect_volume", "pmusic_volume", "twindow_mode", "twindow_size", "nframerate"};
 	private final Renderer renderer;
 
+	private Button back;
+	private final List<ConfigField> fields = new ArrayList<>();
+
 	public Settings(Renderer renderer) {
 		this.renderer = renderer;
 	}
 
 	@Override
-	public void switchTo(IMenu from) {
-		Button back = new Button(renderer)
+	public void switchTo() {
+		back = new Button(renderer)
 				.setSize(150, 50)
 				.setValue("BACK");
 
-		List<ConfigField> fields = new ArrayList<>();
 		for (String s : settings) {
 			String id = s.substring(1);
 
@@ -65,20 +68,9 @@ public class Settings implements IMenu {
 			fields.add(field);
 		}
 
-		back.addListener(e -> {
-			renderer.updateSettings();
-			from.switchTo(null);
-			back.dispose();
-
-			for (ConfigField field : fields) {
-				field.dispose();
-			}
-		});
+		back.addListener(e -> Navigator.pop());
 
 		renderer.render(g2d -> {
-			g2d.setColor(Color.BLACK);
-			g2d.fill(renderer.getBounds());
-
 			int i = 0;
 			for (ConfigField field : fields) {
 				if (field.getId().equals("window_size") && field.getField() instanceof Toggle btn) {
@@ -90,5 +82,16 @@ public class Settings implements IMenu {
 
 			back.render(g2d, 10, 10);
 		});
+	}
+
+	@Override
+	public void dispose() {
+		renderer.updateSettings();
+		back.dispose();
+		for (ConfigField field : fields) {
+			field.dispose();
+		}
+
+		fields.clear();
 	}
 }

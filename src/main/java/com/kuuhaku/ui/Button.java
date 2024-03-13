@@ -18,7 +18,7 @@ public class Button extends MouseAdapter implements IElement<Button, String> {
 
 	private Color color = Color.WHITE;
 	private String text = "";
-	private boolean disabled;
+	private boolean disabled, highlighted;
 
 	public Button(Canvas context) {
 		this.context = context;
@@ -69,6 +69,14 @@ public class Button extends MouseAdapter implements IElement<Button, String> {
 		return this;
 	}
 
+	public boolean isHighlighted() {
+		return highlighted;
+	}
+
+	public void setHighlighted(boolean highlighted) {
+		this.highlighted = highlighted;
+	}
+
 	@Override
 	public Set<ActionListener> getListeners() {
 		return listeners;
@@ -96,8 +104,8 @@ public class Button extends MouseAdapter implements IElement<Button, String> {
 	public void render(Graphics2D g2d, int x, int y) {
 		setLocation(x, y);
 
-		g2d.setStroke(new BasicStroke(isHovered() ? 3 : 1));
-		g2d.setFont(context.getFont().deriveFont(isHovered() ? Font.BOLD : Font.PLAIN, 25));
+		g2d.setStroke(new BasicStroke(isHovered() || highlighted ? 3 : 1));
+		g2d.setFont(context.getFont().deriveFont(isHovered() || highlighted ? Font.BOLD : Font.PLAIN, 25));
 		g2d.setColor(disabled ? color.darker() : color);
 
 		g2d.draw(bounds);

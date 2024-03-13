@@ -17,7 +17,7 @@ public class MothershipLaserShot extends Entity implements IDynamic, ICollide {
 	}
 
 	public MothershipLaserShot(Mothership owner, int x, int y, float angle) {
-		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "laser_shot", 13, 1, 20, false));
+		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "laser_shot", 13, 1, 20, 0, false));
 		this.owner = owner;
 
 		getCoordinates().setPosition(x, y);

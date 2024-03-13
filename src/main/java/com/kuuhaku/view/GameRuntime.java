@@ -7,12 +7,11 @@ import com.kuuhaku.entities.base.Enemy;
 import com.kuuhaku.entities.base.Entity;
 import com.kuuhaku.entities.decoration.Wind;
 import com.kuuhaku.entities.enemies.Invader;
-import com.kuuhaku.entities.players.Carrier;
-import com.kuuhaku.entities.players.Fighter;
 import com.kuuhaku.enums.SoundType;
 import com.kuuhaku.interfaces.*;
 import com.kuuhaku.manager.AssetManager;
 import com.kuuhaku.ui.Button;
+import com.kuuhaku.ui.Navigator;
 import com.kuuhaku.utils.Interp;
 import com.kuuhaku.utils.Utils;
 
@@ -49,7 +48,6 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	private int entCount, partCount;
 	private boolean paused, gameover, closed;
 	private long tick, lastSimu, lastSpawn, lastCull;
-	private Button back;
 	private Clip theme, bossTheme;
 	private Boss boss;
 
@@ -60,19 +58,28 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	private static int highscore;
 
+	private Button back;
+	private Thread simulation;
+
 	public GameRuntime(Renderer renderer) {
 		this.renderer = renderer;
 		this.training = null;
 	}
 
-	public GameRuntime(Renderer renderer, Class<? extends Enemy> training) {
+	public GameRuntime(Renderer renderer, Class<? extends Player> ship, Class<? extends Enemy> training) {
 		this.renderer = renderer;
 		this.training = training;
 		if (training != null) {
 			tick = 100000;
 		}
 
-		players.add(new Carrier(this));
+		try {
+			players.add(ship.getConstructor(GameRuntime.class).newInstance(this));
+		} catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+				 NoSuchMethodException ex) {
+			ex.printStackTrace();
+		}
+
 		for (Class<?> klass : Utils.getAnnotatedClasses(Managed.class, "com.kuuhaku.entities.enemies")) {
 			try {
 				Enemy e = (Enemy) klass.getConstructor(GameRuntime.class).newInstance(this);
@@ -85,12 +92,12 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 	}
 
 	@Override
-	public void switchTo(IMenu from) {
+	public void switchTo() {
 		renderer.addKeyListener(this);
 		spawn(players);
 
 		float simrate = 1000f / UPS;
-		Thread simulation = new Thread(() -> {
+		simulation = new Thread(() -> {
 			while (!closed) {
 				process();
 				lastSimu = System.currentTimeMillis();
@@ -120,27 +127,7 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				.setValue("MAIN MENU")
 				.setDisabled(true);
 
-		back.addListener(e -> {
-			from.switchTo(null);
-			back.dispose();
-			closed = true;
-
-			try {
-				simulation.join();
-			} catch (InterruptedException ex) {
-				throw new RuntimeException(ex);
-			}
-
-			entities.clear();
-
-			if (theme != null) {
-				theme.close();
-			}
-
-			if (bossTheme != null) {
-				bossTheme.close();
-			}
-		});
+		back.addListener(e -> Navigator.popUntil(m -> m instanceof Game));
 
 		renderer.render(this::render);
 	}
@@ -288,38 +275,44 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 				g2d.setColor(bg);
 				g2d.fill(renderer.getBounds());
 
-				long curr = System.currentTimeMillis();
 				back.setColor(foreground);
 				g2d.setColor(foreground);
 				g2d.setFont(renderer.getFont());
 
-				long frameTime = renderer.getFrameTime();
-				long simuTime = curr - lastSimu;
+				if (DEBUG) {
+					long curr = System.currentTimeMillis();
+					long frameTime = renderer.getFrameTime();
+					long simuTime = curr - lastSimu;
 
-				g2d.drawString("FPS: " + (frameTime == 0 ? "---" : (1000 / frameTime)), 10, 20);
-				g2d.drawString("UPS: " + (simuTime == 0 ? "---" : (1000 / simuTime)), 10, 40);
-				g2d.drawString("Entities: " + entCount, 10, 60);
-				g2d.drawString("Particles: " + partCount, 10, 80);
-				g2d.drawString("Audio cues: " + AssetManager.getAudioInstances(), 10, 100);
-				g2d.drawString("Tick: " + tick, 10, 120);
-				g2d.drawString("Spawn limit: " + spawnLimit.availablePermits(), 10, 140);
+					g2d.drawString("FPS: " + (frameTime == 0 ? "---" : (1000 / frameTime)), 10, 20);
+					g2d.drawString("UPS: " + (simuTime == 0 ? "---" : (1000 / simuTime)), 10, 40);
+					g2d.drawString("Entities: " + entCount, 10, 60);
+					g2d.drawString("Particles: " + partCount, 10, 80);
+					g2d.drawString("Audio cues: " + AssetManager.getAudioInstances(), 10, 100);
+					g2d.drawString("Tick: " + tick, 10, 120);
+					g2d.drawString("Spawn limit: " + spawnLimit.availablePermits(), 10, 140);
+				}
 
 				back.setDisabled(!(gameover || paused));
 
 				int spCharge = (int) (getPlayer1().getSpecial().getCharge() * 5);
+				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
+
+				int offset = DEBUG ? renderer.getHeight() - 110 : 0;
 				if (!isTraining()) {
-					g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
-					g2d.drawString("HP: " + getPlayer1().getHp(), 10, renderer.getHeight() - 90);
+					g2d.drawString("HP: " + getPlayer1().getHp(), 10, offset += 20);
+				}
 
-					if (spCharge < 5) {
-						g2d.drawString("Special: [" + ("|".repeat(spCharge) + " ".repeat(5 - spCharge)) + "]", 10, renderer.getHeight() - 70);
-					} else {
-						g2d.drawString("Special: READY", 10, renderer.getHeight() - 70);
-					}
+				if (spCharge < 5) {
+					g2d.drawString("Special: [" + ("|".repeat(spCharge) + " ".repeat(5 - spCharge)) + "]", 10, offset += 20);
+				} else {
+					g2d.drawString("Special: READY", 10, offset += 20);
+				}
 
-					g2d.drawString("Level: " + level, 10, renderer.getHeight() - 50);
-					g2d.drawString("Score: " + score, 10, renderer.getHeight() - 30);
-					g2d.drawString("Highscore: " + highscore, 10, renderer.getHeight() - 10);
+				if (!isTraining()) {
+					g2d.drawString("Level: " + level, 10, offset += 20);
+					g2d.drawString("Score: " + score, 10, offset += 20);
+					g2d.drawString("Highscore: " + highscore, 10, offset += 20);
 
 					if (gameover) {
 						g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 40));
@@ -558,5 +551,27 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public void close() {
 		gameover = true;
+	}
+
+	@Override
+	public void dispose() {
+		back.dispose();
+		closed = true;
+
+		try {
+			simulation.join();
+		} catch (InterruptedException ex) {
+			throw new RuntimeException(ex);
+		}
+
+		entities.clear();
+
+		if (theme != null) {
+			theme.close();
+		}
+
+		if (bossTheme != null) {
+			bossTheme.close();
+		}
 	}
 }

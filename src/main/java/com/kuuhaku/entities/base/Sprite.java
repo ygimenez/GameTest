@@ -10,7 +10,7 @@ import java.awt.image.BufferedImage;
 public final class Sprite {
 	private final GameRuntime runtime;
 	private final String name;
-	private final int gridX, gridY, delay;
+	private final int gridX, gridY, delay, offset;
 	private final boolean loop;
 
 	private Coordinates coordinates;
@@ -27,16 +27,18 @@ public final class Sprite {
 		this.gridY = 1;
 		this.delay = (int) runtime.getFPS();
 		this.loop = false;
+		this.offset = 0;
 		color = runtime.getForeground();
 	}
 
-	public Sprite(GameRuntime runtime, String name, int gridX, int gridY, int delay, boolean loop) {
+	public Sprite(GameRuntime runtime, String name, int gridX, int gridY, int delay, int offset, boolean loop) {
 		this.runtime = runtime;
 		this.name = name;
 		this.gridX = gridX;
 		this.gridY = gridY;
 		this.delay = delay;
 		this.loop = loop;
+		this.offset = offset;
 		color = runtime.getForeground();
 	}
 
@@ -110,9 +112,9 @@ public final class Sprite {
 		if (start == 0) start = runtime.getTick();
 
 		if (loop) {
-			return (int) ((runtime.getTick() - start) / delay) % gridX * gridY;
+			return (int) ((runtime.getTick() - start) / delay + offset) % gridX * gridY;
 		} else {
-			return (int) Math.min((runtime.getTick() - start) / delay, (long) gridX * gridY - 1);
+			return (int) Math.min((runtime.getTick() - start) / delay + offset, (long) gridX * gridY - 1);
 		}
 	}
 

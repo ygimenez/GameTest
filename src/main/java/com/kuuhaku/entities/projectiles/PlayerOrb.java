@@ -19,6 +19,8 @@ public class PlayerOrb extends Projectile {
 	private boolean spent;
 	private int bounces = 5;
 
+	private Entity lastHit;
+
 	public PlayerOrb(Carrier source, int orb) {
 		super(source, source.getDamage(), 0, 0);
 		this.owner = source;
@@ -32,10 +34,11 @@ public class PlayerOrb extends Projectile {
 	public void update() {
 		if (getParent() == null) {
 			move();
+
 			for (Entity entity : getRuntime().getEntities()) {
-				if (entity instanceof IDamageable d && hit(entity)) {
+				if (!entity.equals(lastHit) && entity instanceof IDamageable d && hit(entity)) {
 					AssetManager.playCue("hit");
-					d.damage(getDamage());
+					d.damage((int) (getDamage() * (1 + (5 - bounces) * 0.1)));
 
 					if (bounces > 0) {
 						float[] norm = getImpactNormal(entity);
@@ -50,6 +53,7 @@ public class PlayerOrb extends Projectile {
 						dispose();
 					}
 
+					lastHit = entity;
 					break;
 				}
 			}
@@ -84,11 +88,13 @@ public class PlayerOrb extends Projectile {
 			Rectangle safe = getRuntime().getSafeArea();
 			if (!Utils.between(pos[0] + vector[0] * getSpeed(), safe.x + getWidth() / 2f, safe.x + safe.width - getWidth() / 2f)) {
 				getCoordinates().setAngle((float) (2 * Math.PI - getAngle()));
+				lastHit = null;
 				bounces--;
 			}
 
 			if (!Utils.between(pos[1] + vector[1] * getSpeed(), safe.y + getHeight() / 2f, safe.y + safe.height - getHeight() / 2f)) {
 				getCoordinates().setAngle((float) (Math.PI - getAngle()));
+				lastHit = null;
 				bounces--;
 			}
 		}

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.random.RandomGenerator;
 import java.util.stream.Stream;
 
@@ -330,5 +331,30 @@ public abstract class Utils {
 				x * fac + origin.x * (1 - fac),
 				y * fac + origin.y * (1 - fac)
 		);
+	}
+
+	public static void drawMultilineString(Graphics2D g2d, String text, int x, int y, int width, int kerning, int blankOffset) {
+		String[] lines = text.split("\n");
+		for (String line : lines) {
+			String[] words = line.split("(?<=\\S )");
+			int offset = 0;
+			for (String s : words) {
+				FontMetrics m = g2d.getFontMetrics();
+
+				if (offset + m.stringWidth(s) <= width) {
+					g2d.drawString(s, x + offset, y);
+					offset += m.stringWidth(s);
+				} else {
+					g2d.drawString(s, x, y += m.getHeight() - kerning);
+					offset = m.stringWidth(s);
+				}
+			}
+
+			if (line.isBlank()) {
+				y += g2d.getFontMetrics().getHeight() - kerning + blankOffset;
+			} else {
+				y += g2d.getFontMetrics().getHeight() - kerning;
+			}
+		}
 	}
 }

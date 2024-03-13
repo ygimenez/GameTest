@@ -1,8 +1,11 @@
 package com.kuuhaku.view;
 
+import com.kuuhaku.Main;
 import com.kuuhaku.Renderer;
+import com.kuuhaku.interfaces.IElement;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.ui.Button;
+import com.kuuhaku.ui.Navigator;
 import com.kuuhaku.utils.Utils;
 
 import javax.swing.*;
@@ -13,7 +16,7 @@ public class Game extends JFrame implements IMenu {
 	private final Renderer renderer = new Renderer();
 
 	@Override
-	public void switchTo(IMenu from) {
+	public void switchTo() {
 		Button play = new Button(renderer)
 				.setSize(250, 50)
 				.setValue("PLAY");
@@ -31,32 +34,20 @@ public class Game extends JFrame implements IMenu {
 				.setValue("EXIT");
 
 		play.addListener(e -> {
-			new GameRuntime(renderer, null).switchTo(this);
-			play.dispose();
-			train.dispose();
-			settings.dispose();
-			close.dispose();
+			Navigator.append(new ShipSelector(renderer, false));
+			IElement.dispose(play, train, settings, close);
 		});
 		train.addListener(e -> {
-			new Training(renderer).switchTo(this);
-			play.dispose();
-			train.dispose();
-			settings.dispose();
-			close.dispose();
+			Navigator.append(new ShipSelector(renderer, true));
+			IElement.dispose(play, train, settings, close);
 		});
 		settings.addListener(e -> {
-			new Settings(renderer).switchTo(this);
-			play.dispose();
-			train.dispose();
-			settings.dispose();
-			close.dispose();
+			Navigator.append(new Settings(renderer));
+			IElement.dispose(play, train, settings, close);
 		});
 		close.addListener(e -> System.exit(0));
 
 		renderer.render(g2d -> {
-			g2d.setColor(Color.BLACK);
-			g2d.fill(renderer.getBounds());
-
 			g2d.setColor(Color.WHITE);
 			g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 80));
 			Utils.drawAlignedString(g2d, "SPACE BREACH", renderer.getWidth() / 2, 100, Utils.ALIGN_CENTER);
@@ -67,7 +58,7 @@ public class Game extends JFrame implements IMenu {
 			}
 
 			g2d.setFont(renderer.getFont());
-			Utils.drawAlignedString(g2d, "v0.0.1f-ALPHA", renderer.getWidth() - 10, renderer.getHeight() - 20, Utils.ALIGN_LEFT);
+			Utils.drawAlignedString(g2d, Main.VERSION,renderer.getWidth() - 10, renderer.getHeight() - 20, Utils.ALIGN_LEFT);
 		});
 	}
 }

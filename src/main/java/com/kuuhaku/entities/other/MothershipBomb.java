@@ -17,7 +17,7 @@ public class MothershipBomb extends Entity implements IDynamic, ICollide {
 
 	public MothershipBomb(Mothership owner) {
 		super(owner.getRuntime(), null, new Sprite(owner.getRuntime(), "artillery", 8, 2,
-				owner.isEnraged() ? 15 : 20, false
+				owner.isEnraged() ? 15 : 20, 0, false
 		));
 		this.owner = owner;
 

@@ -2,26 +2,33 @@ package com.kuuhaku.view;
 
 import com.kuuhaku.Renderer;
 import com.kuuhaku.entities.base.Enemy;
+import com.kuuhaku.entities.base.Player;
+import com.kuuhaku.interfaces.IElement;
 import com.kuuhaku.interfaces.IMenu;
 import com.kuuhaku.interfaces.Managed;
 import com.kuuhaku.ui.Button;
+import com.kuuhaku.ui.Navigator;
 import com.kuuhaku.utils.Utils;
 
-import java.awt.*;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class Training implements IMenu {
 	private final Set<Enemy> enemies = new TreeSet<>(Comparator.comparingInt(Enemy::getCost));
 	private final Renderer renderer;
+	private final Player ship;
 
-	public Training(Renderer renderer) {
+	private Button back;
+	private final Map<Enemy, Button> buttons = new LinkedHashMap<>();
+
+	public Training(Renderer renderer, Player ship) {
 		this.renderer = renderer;
+		this.ship = ship;
 	}
 
 	@Override
-	public void switchTo(IMenu from) {
-		Button back = new Button(renderer)
+	public void switchTo() {
+		back = new Button(renderer)
 				.setSize(150, 50)
 				.setValue("BACK");
 
@@ -36,45 +43,24 @@ public class Training implements IMenu {
 			}
 		}
 
-		Map<Enemy, Button> buttons = new LinkedHashMap<>();
 		for (Enemy enemy : enemies) {
 			Button btn = new Button(renderer)
 					.setSize(100, 100)
-					.addListener(e -> {
-						new GameRuntime(renderer, enemy.getClass()).switchTo(from);
-						back.dispose();
-
-						for (Button b : buttons.values()) {
-							b.dispose();
-						}
-					});
+					.addListener(e -> Navigator.append(new GameRuntime(renderer, ship.getClass(), enemy.getClass())));
 
 			buttons.put(enemy, btn);
 		}
 
-		back.addListener(e -> {
-			from.switchTo(null);
-			back.dispose();
-
-			for (Button btn : buttons.values()) {
-				btn.dispose();
-			}
-		});
+		back.addListener(e -> Navigator.pop());
 
 		renderer.render(g2d -> {
-			g2d.setColor(Color.BLACK);
-			g2d.fill(renderer.getBounds());
-
 			int i = 0;
 			for (Map.Entry<Enemy, Button> e : buttons.entrySet()) {
 				Enemy enemy = e.getKey();
 				Button btn = e.getValue();
 
-				int y = 100 + 210 * (i / 6);
-				int sections = Math.min(buttons.size() - 6 * (i / 6), 6);
-
-				int gap = (renderer.getWidth() - 40) / sections;
-				int x = 20 + gap * (i % 6) + (gap / 2 - btn.getWidth() / 2);
+				int y = 10 + btn.getHeight() * (i / 5);
+				int x = renderer.getWidth() - (btn.getWidth() + 10) * (1 + i % 5);
 
 				e.getValue().render(g2d, x, y);
 				g2d.drawImage(enemy.getImage(),
@@ -88,5 +74,12 @@ public class Training implements IMenu {
 
 			back.render(g2d, 10, 10);
 		});
+	}
+
+	@Override
+	public void dispose() {
+		back.dispose();
+		IElement.dispose(buttons.values());
+		buttons.clear();
 	}
 }

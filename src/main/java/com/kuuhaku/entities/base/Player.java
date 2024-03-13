@@ -3,6 +3,7 @@ package com.kuuhaku.entities.base;
 import com.kuuhaku.entities.decoration.PlayerTrail;
 import com.kuuhaku.entities.decoration.Thruster;
 import com.kuuhaku.interfaces.IDamageable;
+import com.kuuhaku.interfaces.IDescribable;
 import com.kuuhaku.interfaces.IDynamic;
 import com.kuuhaku.interfaces.Metadata;
 import com.kuuhaku.manager.AssetManager;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import static java.awt.event.KeyEvent.*;
 
-public abstract class Player extends Entity implements IDynamic, IDamageable {
+public abstract class Player extends Entity implements IDynamic, IDamageable, IDescribable {
 	private final float[] velocity = {0, 0};
 	private final Cooldown atkCooldown, spCooldown;
 	private int hp, baseHp;
@@ -27,10 +28,10 @@ public abstract class Player extends Entity implements IDynamic, IDamageable {
 	private float speed;
 	private int grace = 0;
 
-	public Player(GameRuntime runtime, float fireRate, int bullets, int damage, float speed) {
+	public Player(GameRuntime runtime, float fireRate, float specialRate, int bullets, int damage, float speed) {
 		super(runtime, null);
 		this.atkCooldown = new Cooldown(runtime, (int) (1000 / fireRate));
-		this.spCooldown = new Cooldown(runtime, 5000);
+		this.spCooldown = new Cooldown(runtime, (int) (5000 / specialRate));
 
 		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
 		this.baseHp = this.hp = info.hp();
