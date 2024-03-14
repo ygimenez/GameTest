@@ -48,7 +48,7 @@ public class Carrier extends Player {
 		for (Entity child : orbs) {
 			if (child instanceof PlayerOrb orb) {
 				orb.setParent(null);
-				orb.setSpeed(5);
+				orb.setSpeed(3.5f);
 			}
 		}
 
@@ -72,6 +72,8 @@ public class Carrier extends Player {
 		return """
 				Heavily armored drone carrier, made from technology harvested from alien mothership debris.
 				Requires good aiming and positioning skills, but greatly rewards those who can master it.
+				
+				Drones deal 10% more damage each time they ricochet.
 				""";
 	}
 }

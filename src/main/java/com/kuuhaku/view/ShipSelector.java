@@ -97,22 +97,27 @@ public class ShipSelector implements IMenu {
 
 			if (selected != null) {
 				assert baseline != null;
+
+				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 30));
+				g2d.drawString(selected.getClass().getSimpleName(), 10, renderer.getHeight() / 3);
+
+				g2d.setFont(renderer.getFont().deriveFont(Font.PLAIN, 20));
+				Utils.drawMultilineString(g2d, selected.getDescription(), 10, renderer.getHeight() / 3 + 30, renderer.getWidth() / 2, 0, 0);
+
 				int armor = (int) (Utils.clamp((float) selected.getBaseHp() / baseline.getBaseHp() / 2, 0.1f, 1) * 10);
 				int damage = (int) (Utils.clamp((float) selected.getDamage() / baseline.getDamage() / 2, 0.1f, 1) * 10);
 				int bullets = (int) (Utils.clamp((float) selected.getBullets() / baseline.getBullets() / 2, 0.1f, 1) * 10);
+				int firerate = (int) (Utils.clamp((float) selected.getAtkCooldown().getTime() / baseline.getAtkCooldown().getTime() / 2, 0.1f, 1) * 10);
+				int sprate = (int) (Utils.clamp((float) selected.getSpCooldown().getTime() / baseline.getSpCooldown().getTime() / 2, 0.1f, 1) * 10);
 				int speed = (int) (Utils.clamp(selected.getSpeed() / baseline.getSpeed() / 2, 0.1f, 1) * 10);
 
 				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));
-				g2d.drawString("Armor:   [" + ("|".repeat(armor) + " ".repeat(10 - armor)) + "]", 10, renderer.getHeight() - 70);
-				g2d.drawString("Damage:  [" + ("|".repeat(damage) + " ".repeat(10 - damage)) + "]", 10, renderer.getHeight() - 50);
-				g2d.drawString("Bullets: [" + ("|".repeat(bullets) + " ".repeat(10 - bullets)) + "]", 10, renderer.getHeight() - 30);
-				g2d.drawString("Speed:   [" + ("|".repeat(speed) + " ".repeat(10 - speed)) + "]", 10, renderer.getHeight() - 10);
-
-				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 30));
-				g2d.drawString(selected.getClass().getSimpleName(), 10, renderer.getHeight() / 2);
-
-				g2d.setFont(renderer.getFont().deriveFont(Font.PLAIN, 20));
-				Utils.drawMultilineString(g2d, selected.getDescription(), 10, renderer.getHeight() / 2 + 30, renderer.getWidth() / 2, 0, 0);
+				g2d.drawString("Armor:        [" + ("|".repeat(armor) + " ".repeat(10 - armor)) + "]", 10, renderer.getHeight() - 110);
+				g2d.drawString("Damage:       [" + ("|".repeat(damage) + " ".repeat(10 - damage)) + "]", 10, renderer.getHeight() - 90);
+				g2d.drawString("Bullets:      [" + ("|".repeat(bullets) + " ".repeat(10 - bullets)) + "]", 10, renderer.getHeight() - 70);
+				g2d.drawString("Fire rate:    [" + ("|".repeat(firerate) + " ".repeat(10 - firerate)) + "]", 10, renderer.getHeight() - 50);
+				g2d.drawString("Special rate: [" + ("|".repeat(sprate) + " ".repeat(10 - sprate)) + "]", 10, renderer.getHeight() - 30);
+				g2d.drawString("Speed:        [" + ("|".repeat(speed) + " ".repeat(10 - speed)) + "]", 10, renderer.getHeight() - 10);
 			}
 
 			start.setDisabled(selected == null);

@@ -180,6 +180,10 @@ public abstract class Player extends Entity implements IDynamic, IDamageable, ID
 		return atkCooldown;
 	}
 
+	public Cooldown getSpCooldown() {
+		return spCooldown;
+	}
+
 	@Override
 	public void onDestroy() {
 		AssetManager.playCue("explode");

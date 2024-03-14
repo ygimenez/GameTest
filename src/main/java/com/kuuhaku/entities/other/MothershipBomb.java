@@ -45,7 +45,7 @@ public class MothershipBomb extends Entity implements IDynamic, ICollide {
 	public boolean hit(Entity other) {
 		if (other instanceof IParticle) return false;
 		else if (!isVisible()) return false;
-		else if (!Utils.between(getSprite().getFrame(), 8, 13)) return false;
+		else if (!Utils.between(getSprite().getFrame(), 8, 11)) return false;
 
 		return other instanceof Player && getCoordinates().intersect(other.getCoordinates());
 	}

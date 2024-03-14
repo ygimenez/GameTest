@@ -15,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrackable, IDamageable {
 	private static final List<Class<Pickup>> drops = new ArrayList<>();
-	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - Math.min(getCost() * 0.0005f, 0.2f);
+	private final boolean spawnDrop = Utils.rng().nextFloat() > 1 - Math.min(getCost() * 0.001f, 0.2f);
 	private final Cooldown cooldown;
 	private int hp, baseHp;
 
