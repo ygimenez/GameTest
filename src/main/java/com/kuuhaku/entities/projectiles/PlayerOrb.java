@@ -14,7 +14,6 @@ import java.awt.image.BufferedImage;
 
 @Metadata(sprite = "orb")
 public class PlayerOrb extends Projectile {
-	private final Carrier owner;
 	private final int orb;
 	private boolean spent;
 	private int bounces = 5;
@@ -23,7 +22,6 @@ public class PlayerOrb extends Projectile {
 
 	public PlayerOrb(Carrier source, int orb) {
 		super(source, source.getDamage(), 0, 0);
-		this.owner = source;
 		this.orb = orb;
 
 		setParent(source);
@@ -64,18 +62,18 @@ public class PlayerOrb extends Projectile {
 						AssetManager.playCue("hit");
 						d.damage(getDamage());
 						spent = true;
-						owner.getSpentOrbs().add(this);
+						((Carrier) getSource()).getSpentOrbs().add(this);
 						break;
 					}
 				}
 			}
 
-			int radius = owner.getRadius() * 5;
-			float angleOffset = (360f / owner.getBullets()) * orb + owner.getOrbAngle();
+			int radius = getSource().getRadius() * 5;
+			float angleOffset = (360f / ((Carrier) getSource()).getBullets()) * orb + ((Carrier) getSource()).getOrbAngle();
 			getCoordinates().setAngle((float) Math.toRadians(-angleOffset + 180));
 			getCoordinates().setPosition(
-					owner.getWidth() / 2f + Utils.fsin((float) Math.toRadians(angleOffset)) * radius,
-					owner.getHeight() / 2f + Utils.fcos((float) Math.toRadians(angleOffset)) * radius
+					getSource().getWidth() / 2f + Utils.fsin((float) Math.toRadians(angleOffset)) * radius,
+					getSource().getHeight() / 2f + Utils.fcos((float) Math.toRadians(angleOffset)) * radius
 			);
 		}
 	}

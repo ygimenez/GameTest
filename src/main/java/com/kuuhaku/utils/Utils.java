@@ -309,6 +309,14 @@ public abstract class Utils {
 		return (float) (Math.toDegrees(Math.atan2(dy, dx)) + 270) % 360;
 	}
 
+	public static float distanceBetween(Entity a, Entity b) {
+		return distanceBetween(a.getGlobalCenter(), b.getGlobalCenter());
+	}
+
+	public static float distanceBetween(Point2D.Float a, Point2D.Float b) {
+		return (float) a.distance(b);
+	}
+
 	public static int direction(float value) {
 		if (value < 0) return -1;
 		else if (value > 0) return 1;

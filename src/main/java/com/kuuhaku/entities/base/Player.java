@@ -133,8 +133,8 @@ public abstract class Player extends Entity implements IDynamic, IDamageable, ID
 			shoot();
 		}
 
-		if (getRuntime().keyState(VK_CONTROL) && spCooldown.use()) {
-			special();
+		if (getRuntime().keyState(VK_CONTROL) && spCooldown.canUse() && special()) {
+			spCooldown.use();
 		}
 
 		getRuntime().spawn(
@@ -174,7 +174,7 @@ public abstract class Player extends Entity implements IDynamic, IDamageable, ID
 
 	abstract protected void shoot();
 
-	abstract protected void special();
+	abstract protected boolean special();
 
 	public Cooldown getAtkCooldown() {
 		return atkCooldown;

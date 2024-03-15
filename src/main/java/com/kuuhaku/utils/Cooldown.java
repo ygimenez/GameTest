@@ -34,11 +34,20 @@ public class Cooldown {
 		return Utils.clamp((float) (tick - lastUse) / (time + offset), 0, 1);
 	}
 
-	public boolean use() {
+	public boolean canUse() {
 		if (paused || runtime.isGameover()) return false;
 
 		long tick = runtime.getTick() - pauseOffset;
 		if (tick - lastUse > time + offset) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public boolean use() {
+		long tick = runtime.getTick() - pauseOffset;
+		if (canUse()) {
 			lastUse = tick;
 			return true;
 		}

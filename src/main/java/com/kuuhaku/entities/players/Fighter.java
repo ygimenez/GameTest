@@ -26,9 +26,10 @@ public class Fighter extends Player {
 	}
 
 	@Override
-	protected void special() {
+	protected boolean special() {
 		AssetManager.playCue("ship_fire");
 		getRuntime().spawn(new PlayerTorpedo(this));
+		return true;
 	}
 
 	@Override

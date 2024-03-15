@@ -17,6 +17,7 @@ public final class Sprite {
 	private long start;
 	private int track = -1;
 	private Color color;
+	private float[] scale = {1, 1};
 
 	private BufferedImage cached;
 
@@ -49,7 +50,16 @@ public final class Sprite {
 	public BufferedImage getImage() {
 		BufferedImage source = cached;
 		if (source == null) {
-			source = cached = applyColor(AssetManager.getSprite(name));
+			BufferedImage sample = applyColor(AssetManager.getSprite(name));
+			if (sample != null) {
+				source = new BufferedImage((int) (sample.getWidth() * scale[0]), (int) (sample.getHeight() * scale[1]), sample.getType());
+
+				Graphics2D g2d = source.createGraphics();
+				g2d.drawImage(sample, 0, 0, source.getWidth(), source.getHeight(), null);
+				g2d.dispose();
+
+				cached = source;
+			}
 		}
 
 		if (source == null) {
@@ -95,14 +105,7 @@ public final class Sprite {
 
 	public Coordinates getBounds() {
 		if (coordinates == null) {
-			if (hasImage()) {
-				BufferedImage sprite = getImage();
-				assert sprite != null;
-
-				coordinates = new Coordinates(new Rectangle(sprite.getWidth(), sprite.getHeight()));
-			} else {
-				coordinates = new Coordinates();
-			}
+			recalculateBounds();
 		}
 
 		return coordinates;
@@ -122,8 +125,38 @@ public final class Sprite {
 		this.track = track;
 	}
 
+	public Color getColor() {
+		return color;
+	}
+
 	public void setColor(Color color) {
 		this.color = color;
 		this.cached = null;
+	}
+
+	public float[] getScale() {
+		return scale;
+	}
+
+	public void setScale(float w, float h) {
+		this.scale = new float[]{w, h};
+		this.cached = null;
+		recalculateBounds();
+	}
+
+	private void recalculateBounds() {
+		if (hasImage()) {
+			BufferedImage sprite = getImage();
+			assert sprite != null;
+
+			Rectangle rect = new Rectangle(sprite.getWidth(), sprite.getHeight());
+			if (coordinates != null) {
+				rect.setBounds((int) coordinates.getPosition()[0], (int) coordinates.getPosition()[1], rect.width, rect.height);
+			}
+
+			coordinates = new Coordinates(rect);
+		} else {
+			coordinates = new Coordinates();
+		}
 	}
 }

@@ -107,8 +107,8 @@ public class ShipSelector implements IMenu {
 				int armor = (int) (Utils.clamp((float) selected.getBaseHp() / baseline.getBaseHp() / 2, 0.1f, 1) * 10);
 				int damage = (int) (Utils.clamp((float) selected.getDamage() / baseline.getDamage() / 2, 0.1f, 1) * 10);
 				int bullets = (int) (Utils.clamp((float) selected.getBullets() / baseline.getBullets() / 2, 0.1f, 1) * 10);
-				int firerate = (int) (Utils.clamp((float) selected.getAtkCooldown().getTime() / baseline.getAtkCooldown().getTime() / 2, 0.1f, 1) * 10);
-				int sprate = (int) (Utils.clamp((float) selected.getSpCooldown().getTime() / baseline.getSpCooldown().getTime() / 2, 0.1f, 1) * 10);
+				int firerate = (int) (Utils.clamp((float) baseline.getAtkCooldown().getTime() / selected.getAtkCooldown().getTime() / 2, 0.1f, 1) * 10);
+				int sprate = (int) (Utils.clamp((float) baseline.getSpCooldown().getTime() / selected.getSpCooldown().getTime() / 2, 0.1f, 1) * 10);
 				int speed = (int) (Utils.clamp(selected.getSpeed() / baseline.getSpeed() / 2, 0.1f, 1) * 10);
 
 				g2d.setFont(renderer.getFont().deriveFont(Font.BOLD, 20));

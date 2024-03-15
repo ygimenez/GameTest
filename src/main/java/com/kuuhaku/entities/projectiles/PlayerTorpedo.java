@@ -10,12 +10,10 @@ import com.kuuhaku.manager.AssetManager;
 
 @Metadata(sprite = "torpedo")
 public class PlayerTorpedo extends Projectile {
-	private final Player owner;
 	private int fuse = getRuntime().millisToTick(1000);
 
 	public PlayerTorpedo(Player source) {
 		super(source, source.getDamage() * 5, source.getFireRate() / 2, 0);
-		this.owner = source;
 	}
 
 	@Override
@@ -32,9 +30,5 @@ public class PlayerTorpedo extends Projectile {
 				break;
 			}
 		}
-	}
-
-	public Player getOwner() {
-		return owner;
 	}
 }

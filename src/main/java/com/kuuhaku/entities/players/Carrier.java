@@ -41,18 +41,23 @@ public class Carrier extends Player {
 	}
 
 	@Override
-	protected void special() {
-		AssetManager.playCue("ship_fire");
+	protected boolean special() {
+		if (spentOrbs.size() - orbs > 0) {
+			AssetManager.playCue("ship_fire");
 
-		Set<Entity> orbs = new HashSet<>(getChildren());
-		for (Entity child : orbs) {
-			if (child instanceof PlayerOrb orb) {
-				orb.setParent(null);
-				orb.setSpeed(3.5f);
+			Set<Entity> orbs = new HashSet<>(getChildren());
+			for (Entity child : orbs) {
+				if (child instanceof PlayerOrb orb) {
+					orb.setParent(null);
+					orb.setSpeed(3.5f);
+				}
 			}
+
+			this.orbs = 0;
+			return true;
 		}
 
-		this.orbs = 0;
+		return false;
 	}
 
 	public Queue<PlayerOrb> getSpentOrbs() {
