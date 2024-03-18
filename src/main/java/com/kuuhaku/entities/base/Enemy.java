@@ -30,7 +30,7 @@ public abstract class Enemy extends Entity implements IDynamic, ICollide, ITrack
 		this.cooldown = new Cooldown(runtime, (int) (cooldown / (1 + 0.1f * runtime.getLevel())));
 
 		Metadata info = getClass().getDeclaredAnnotation(Metadata.class);
-		this.hp = this.baseHp = info.hp() * runtime.getLevel();
+		this.hp = this.baseHp = (info.hp() + runtime.getScore() / 2) * runtime.getLevel();
 
 		if (runtime.getTick() > 0) {
 			getSprite().setColor(spawnDrop ? Color.ORANGE.brighter() : runtime.getForeground());

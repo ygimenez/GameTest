@@ -20,6 +20,7 @@ import javax.sound.sampled.FloatControl;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.geom.Point2D;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.*;
@@ -146,6 +147,10 @@ public class GameRuntime extends KeyAdapter implements IMenu {
 
 	public Rectangle getSafeArea() {
 		return new Rectangle(renderer.getResolution().getBounds().width, renderer.getHeight());
+	}
+
+	public Point2D.Float getArenaCenter() {
+		return new Point2D.Float(renderer.getResolution().getBounds().width / 2f, renderer.getHeight() / 2f);
 	}
 
 	public synchronized Set<Entity> getEntities() {

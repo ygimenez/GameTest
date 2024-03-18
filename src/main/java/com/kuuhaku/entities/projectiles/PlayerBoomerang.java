@@ -42,7 +42,7 @@ public class PlayerBoomerang extends Projectile {
 					hitCooldown = getRuntime().millisToTick(100);
 				}
 
-				if (isSource) {
+				if (isSource && speedMult <= 0.9) {
 					dispose();
 				}
 

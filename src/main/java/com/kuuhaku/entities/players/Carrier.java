@@ -42,7 +42,7 @@ public class Carrier extends Player {
 
 	@Override
 	protected boolean special() {
-		if (spentOrbs.size() - orbs > 0) {
+		if (orbs - spentOrbs.size() > 0) {
 			AssetManager.playCue("ship_fire");
 
 			Set<Entity> orbs = new HashSet<>(getChildren());

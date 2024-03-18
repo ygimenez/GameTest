@@ -144,6 +144,10 @@ public final class Sprite {
 		recalculateBounds();
 	}
 
+	public boolean hasFinished() {
+		return getFrame() == gridX * gridY - 1;
+	}
+
 	private void recalculateBounds() {
 		if (hasImage()) {
 			BufferedImage sprite = getImage();

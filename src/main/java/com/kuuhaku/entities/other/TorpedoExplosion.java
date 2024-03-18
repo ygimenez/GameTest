@@ -25,7 +25,7 @@ public class TorpedoExplosion extends Entity implements IDynamic, ICollide {
 
 	@Override
 	public void update() {
-		if (getSprite().getFrame() == 15) dispose();
+		if (getSprite().hasFinished()) dispose();
 		else {
 			for (Entity entity : getRuntime().getEntities()) {
 				if (entity instanceof IDamageable d && hit(entity)) {

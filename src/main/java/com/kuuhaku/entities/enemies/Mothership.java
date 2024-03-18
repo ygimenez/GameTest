@@ -41,7 +41,7 @@ public class Mothership extends Boss {
 			CompletableFuture.runAsync(() -> {
 				for (int i = 0; i < 10; i++) {
 					getRuntime().spawn(new Defender(this));
-					Utils.await(getRuntime(), 36);
+					Utils.await(getRuntime(), (long) (36 / getSpeedMult()));
 				}
 
 				getCooldown().resume();
@@ -59,10 +59,10 @@ public class Mothership extends Boss {
 
 		if (rotation.isEmpty()) {
 			rotation.addAll(List.of(
-					this::laserSweep,
-					this::artillery,
-					this::laserBarrage,
-					this::laserCross,
+//					this::laserSweep,
+//					this::artillery,
+//					this::laserBarrage,
+//					this::laserCross,
 					this::meteorMaze
 			));
 
@@ -104,58 +104,100 @@ public class Mothership extends Boss {
 		Rectangle safe = getRuntime().getSafeArea();
 		Player target = getRuntime().getRandomPlayer();
 
-		for (int i = 0; i < 2; i++) {
-			Entity laser = new MothershipLaserShot(this);
-			laser.getCoordinates().setAnchor(0.5f, 0);
-			laser.getCoordinates().setPosition(safe.width * i - (5 - 10 * i), -5);
-			laser.getCoordinates().setAngle((float) Math.toRadians(Utils.angBetween(
-					new Point2D.Float(safe.width * i - (5 - 10 * i), -5), target.getGlobalCenter())
-			));
+		if (isEnraged()) {
+			for (int i = 0; i < 10; i++) {
+				boolean right = Utils.rng().nextBoolean();
 
-			getRuntime().spawn(laser);
+				Entity laser = new MothershipLaserShot(this);
+				laser.getCoordinates().setAnchor(0.5f, 0);
+				laser.getCoordinates().setPosition(right ? safe.width + 5 : 5, -5);
+				laser.getCoordinates().setAngle((float) Math.toRadians(Utils.angBetween(
+						new Point2D.Float(right ? safe.width + 5 : 5, -5), target.getGlobalCenter())
+				));
+
+				getRuntime().spawn(laser);
+				Utils.await(getRuntime(), getCooldown().getTime() / 8);
+			}
+		} else {
+			for (int i = 0; i < 2; i++) {
+				Entity laser = new MothershipLaserShot(this);
+				laser.getCoordinates().setAnchor(0.5f, 0);
+				laser.getCoordinates().setPosition(safe.width * i - (5 - 10 * i), -5);
+				laser.getCoordinates().setAngle((float) Math.toRadians(Utils.angBetween(
+						new Point2D.Float(safe.width * i - (5 - 10 * i), -5), target.getGlobalCenter())
+				));
+
+				getRuntime().spawn(laser);
+			}
 		}
 	}
 
 	private void meteorMaze() {
 		Rectangle safe = getRuntime().getSafeArea();
 
-		Entity ref = new MeteorProjectile(this, 0, 0, 0);
-		int radius = (int) (Math.max(ref.getWidth(), ref.getHeight()) * 1.25f);
+		if (isEnraged()) {
+			Point2D.Float center = getRuntime().getArenaCenter();
+			int safeRadius = (int) (Math.max(safe.width, safe.height) * 0.75f);
 
-		int last = -1;
-		for (int wave = 0; wave < 5; wave++) {
-			int direction = -1;
-			while (direction == last || direction == -1) {
-				direction = Utils.rng().nextInt(4);
+			for (int wave = 0; wave < 5; wave++) {
+				int holes = 4;
+				boolean hole = false;
+				for (int i = 0; i < 36; i++) {
+					if (!hole && i < 32) {
+						hole = Utils.rng().nextBoolean();
+					} else if (holes > 0) {
+						holes--;
+						continue;
+					}
+
+					getRuntime().spawn(new MeteorProjectile(this,
+							(int) (center.x + Utils.fsin((float) Math.toRadians(i * 10)) * safeRadius),
+							(int) (center.y + Utils.fcos((float) Math.toRadians(i * 10)) * safeRadius),
+							4
+					));
+				}
+
+				Utils.await(getRuntime(), getCooldown().getTime());
 			}
+		} else {
+			Entity ref = new MeteorProjectile(this, 0, 0, 0);
+			int radius = (int) (Math.max(ref.getWidth(), ref.getHeight()) * 1.25f);
 
-			last = direction;
-			int origin = direction % 2;
-			int count = direction < 2 ? safe.width / radius : safe.height / radius;
-			int holes = 0;
+			int last = -1;
+			for (int wave = 0; wave < 5; wave++) {
+				int direction = -1;
+				while (direction == last || direction == -1) {
+					direction = Utils.rng().nextInt(4);
+				}
 
-			for (int i = 0; i < count; i++) {
-				boolean hole = (holes < 3 && Utils.rng().nextBoolean()) || (holes == 0 && i == count - 1);
+				last = direction;
+				int origin = direction % 2;
+				int count = direction < 2 ? safe.width / radius : safe.height / radius;
+				int holes = 0;
 
-				if (hole) holes++;
-				else {
-					if (direction < 2) {
-						getRuntime().spawn(new MeteorProjectile(this,
-								radius * i,
-								safe.height * origin - (origin == 0 ? radius : -radius),
-								direction
-						));
-					} else {
-						getRuntime().spawn(new MeteorProjectile(this,
-								safe.width * origin - (origin == 0 ? radius : -radius),
-								radius * i,
-								direction
-						));
+				for (int i = 0; i < count; i++) {
+					boolean hole = (holes < 3 && Utils.rng().nextBoolean()) || (holes == 0 && i == count - 1);
+
+					if (hole) holes++;
+					else {
+						if (direction < 2) {
+							getRuntime().spawn(new MeteorProjectile(this,
+									radius * i,
+									safe.height * origin - (origin == 0 ? radius : -radius),
+									direction
+							));
+						} else {
+							getRuntime().spawn(new MeteorProjectile(this,
+									safe.width * origin - (origin == 0 ? radius : -radius),
+									radius * i,
+									direction
+							));
+						}
 					}
 				}
-			}
 
-			Utils.await(getRuntime(), getCooldown().getTime() / 3);
+				Utils.await(getRuntime(), getCooldown().getTime() / 3);
+			}
 		}
 	}
 

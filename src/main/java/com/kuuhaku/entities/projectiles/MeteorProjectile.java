@@ -4,6 +4,10 @@ import com.kuuhaku.entities.base.Projectile;
 import com.kuuhaku.entities.enemies.Mothership;
 import com.kuuhaku.interfaces.ITrackable;
 import com.kuuhaku.interfaces.Metadata;
+import com.kuuhaku.utils.Utils;
+
+import java.awt.*;
+import java.awt.geom.Point2D;
 
 @Metadata(sprite = "meteor")
 public class MeteorProjectile extends Projectile implements ITrackable {
@@ -11,6 +15,7 @@ public class MeteorProjectile extends Projectile implements ITrackable {
 	private static final int BOTTOM_TO_TOP = 1;
 	private static final int LEFT_TO_RIGHT = 2;
 	private static final int RIGHT_TO_LEFT = 3;
+	private static final int TO_CENTER = 4;
 
 	private final int direction;
 
@@ -31,6 +36,16 @@ public class MeteorProjectile extends Projectile implements ITrackable {
 			case BOTTOM_TO_TOP -> getCoordinates().translate(0, -getSpeed());
 			case LEFT_TO_RIGHT -> getCoordinates().translate(getSpeed(), 0);
 			case RIGHT_TO_LEFT -> getCoordinates().translate(-getSpeed(), 0);
+			case TO_CENTER -> {
+				Point2D.Float target = getRuntime().getArenaCenter();
+
+				float[] vector = Utils.angToVec(Utils.angBetween(this.getCenter(), target));
+				getCoordinates().translate(vector[0] * getSpeed(), vector[1] * getSpeed());
+
+				if (Utils.distanceBetween(this.getCenter(), target) < getRadius()) {
+					dispose();
+				}
+			}
 		}
 	}
 }
