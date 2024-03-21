@@ -341,28 +341,24 @@ public abstract class Utils {
 		);
 	}
 
-	public static void drawMultilineString(Graphics2D g2d, String text, int x, int y, int width, int kerning, int blankOffset) {
+	public static void drawMultilineString(Graphics2D g2d, String text, int x, int y, int width) {
+		FontMetrics m = g2d.getFontMetrics();
+
 		String[] lines = text.split("\n");
 		for (String line : lines) {
 			String[] words = line.split("(?<=\\S )");
 			int offset = 0;
 			for (String s : words) {
-				FontMetrics m = g2d.getFontMetrics();
-
 				if (offset + m.stringWidth(s) <= width) {
 					g2d.drawString(s, x + offset, y);
 					offset += m.stringWidth(s);
 				} else {
-					g2d.drawString(s, x, y += m.getHeight() - kerning);
+					g2d.drawString(s, x, y += m.getHeight());
 					offset = m.stringWidth(s);
 				}
 			}
 
-			if (line.isBlank()) {
-				y += g2d.getFontMetrics().getHeight() - kerning + blankOffset;
-			} else {
-				y += g2d.getFontMetrics().getHeight() - kerning;
-			}
+			y += g2d.getFontMetrics().getHeight();
 		}
 	}
 }

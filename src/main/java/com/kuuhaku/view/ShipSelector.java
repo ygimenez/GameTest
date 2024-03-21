@@ -102,7 +102,7 @@ public class ShipSelector implements IMenu {
 				g2d.drawString(selected.getClass().getSimpleName(), 10, renderer.getHeight() / 3);
 
 				g2d.setFont(renderer.getFont().deriveFont(Font.PLAIN, 20));
-				Utils.drawMultilineString(g2d, selected.getDescription(), 10, renderer.getHeight() / 3 + 30, renderer.getWidth() / 2, 0, 0);
+				Utils.drawMultilineString(g2d, selected.getDescription(), 10, renderer.getHeight() / 3 + 30, renderer.getWidth() / 2);
 
 				int armor = (int) (Utils.clamp((float) selected.getBaseHp() / baseline.getBaseHp() / 2, 0.1f, 1) * 10);
 				int damage = (int) (Utils.clamp((float) selected.getDamage() / baseline.getDamage() / 2, 0.1f, 1) * 10);

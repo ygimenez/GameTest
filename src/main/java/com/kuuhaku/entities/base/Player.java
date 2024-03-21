@@ -13,6 +13,7 @@ import com.kuuhaku.view.GameRuntime;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -148,7 +149,7 @@ public abstract class Player extends Entity implements IDynamic, IDamageable, ID
 		float vy = velocity[1];
 		float friction = 0.4f;
 
-		float sway = -Utils.clamp(vx - ((vx + speed * dx) * friction) / getRuntime().getFPS(), -1, 1);
+		float sway = -(vx - ((vx + speed * dx) * friction) / getRuntime().getFPS());
 		getCoordinates().setAngle((float) Math.toRadians(180 - 30 * sway));
 
 		for (Entity child : getChildren()) {
